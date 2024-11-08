@@ -5,6 +5,10 @@ declare(strict_types = 1);
 require_once 'notification.civix.php';
 // phpcs:enable
 
+use Symfony\Component\Config\Resource\FileResource;
+use Symfony\Component\Config\Resource\GlobResource;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+
 /**
  * Implements hook_civicrm_config().
  *
@@ -12,6 +16,17 @@ require_once 'notification.civix.php';
  */
 function notification_civicrm_config(\CRM_Core_Config $config): void {
   _notification_civix_civicrm_config($config);
+}
+
+function notification_civicrm_container(ContainerBuilder $container): void {
+  $globResource = new GlobResource(__DIR__ . '/services', '/*.php', FALSE);
+  // Container will be rebuilt if a *.php file is added to services
+  $container->addResource($globResource);
+  foreach ($globResource->getIterator() as $path => $info) {
+    // Container will be rebuilt if file changes
+    $container->addResource(new FileResource($path));
+    require $path;
+  }
 }
 
 /**
