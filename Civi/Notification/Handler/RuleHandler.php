@@ -4,72 +4,57 @@ declare(strict_types = 1);
 
 namespace Civi\Notification\Handler;
 
-use Civi\Notification\Entity\NotificationRecipient;
+use Civi\Notification\Data\NotificationContext;
+use Civi\Notification\Data\NotificationRecipient;
 use Civi\Notification\Entity\RuleEntity;
-use Civi\Notification\Interface\RuleHandlerInterface;
-use Civi\Notification\Source\ContactLoader;
-use Civi\Notification\Source\MsgTemplateDeterminer;
-use Civi\Notification\Source\NotificationSender;
+use Civi\Notification\EntityService\ContactLoaderInterface;
+use Civi\Notification\MsgTemplateDeterminerInterface;
+use Civi\Notification\NotificationSenderInterface;
+use Civi\Notification\TokenContextGeneratorInterface;
 
-class RuleHandler implements RuleHandlerInterface {
+final class RuleHandler implements RuleHandlerInterface {
 
-  private ConditionHandler $conditionHandler;
-  private FieldMonitoringHandler $fieldMonitorHandler;
-  private NotificationSender $notificationSender;
-  private ContactLoader $contactLoader;
-  private MsgTemplateDeterminer $msgTemplateDeterminer;
+  public function __construct(
+    private RuleMatchCheckerInterface $ruleMatchChecker,
+    private NotificationSenderInterface $notificationSender,
+    private ContactLoaderInterface $contactLoader,
+    private MsgTemplateDeterminerInterface $messageTemplateDeterminer,
+    private TokenContextGeneratorInterface $tokenContextGenerator
+  ) {}
 
-  public function __construct() {
-    $this->conditionHandler = new ConditionHandler();
-    $this->fieldMonitorHandler = new FieldMonitoringHandler();
-    $this->notificationSender = new NotificationSender();
-    $this->contactLoader = new ContactLoader();
-    $this->msgTemplateDeterminer = new MsgTemplateDeterminer();
-  }
+  public function evaluateRule(RuleEntity $rule, NotificationContext $context): bool {
+    if ($this->ruleMatchChecker->isRuleMatched($rule, $context)) {
+      $this->sendNotifications($rule, $context);
 
-  public function evaluateRule(RuleEntity $rule, array $newValues, array $oldValues): bool {
-    foreach ($rule->getConditions() as $condition) {
-      if (!$this->conditionHandler->evaluateCondition($condition, $newValues)) {
-        return FALSE;
-      }
+      return TRUE;
     }
 
-    foreach ($rule->getFieldMonitorings() as $fieldMonitoring) {
-      if (!$this->fieldMonitorHandler->evaluate($fieldMonitoring, $newValues, $oldValues)) {
-        return FALSE;
-      }
-    }
-
-    // TODO: add logic for sending notification
-    $this->sendNotification($rule);
-
-    return TRUE;
+    return FALSE;
   }
 
-  private function sendNotification(RuleEntity $rule): void {
+  private function sendNotifications(RuleEntity $rule, NotificationContext $context): void {
+    $tokenContext = $this->tokenContextGenerator->generateTokenContext($rule, $context);
+
     foreach ($this->getNotificationRecipients($rule) as $recipient) {
-      $msgId = $this->msgTemplateDeterminer->determineMessageTemplateId($recipient, $rule->getMsgTemplates());
+      $templateId = $this->messageTemplateDeterminer->determineMessageTemplateId($recipient, $rule->getMsgTemplates());
 
-      if ($msgId != NULL) {
-        $this->notificationSender->sendNotification($msgId, $recipient, []);
+      if ($templateId != NULL) {
+        $this->notificationSender->sendNotification($templateId, $recipient, $tokenContext);
       }
     }
   }
 
   /**
-   * @param \Civi\Notification\Entity\RuleEntity $rule
-   * @return array<int, NotificationRecipient>
+   * @return list<NotificationRecipient>
    */
   private function getNotificationRecipients(RuleEntity $rule): array {
-    $recipients = [];
-
     if ($rule->getEmailAddresses() !== NULL) {
-      $recipients = $this->contactLoader->getContactsByRuleEmails($rule);
+      return array_map(fn (string $email) => new NotificationRecipient($email), $rule->getEmailAddresses());
     }
-    else {
-      foreach ($rule->getContactSelections() as $contactSelection) {
-        $recipients = array_merge($recipients, $this->contactLoader->getContacts($contactSelection));
-      }
+
+    $recipients = [];
+    foreach ($rule->getContactSelections() as $contactSelection) {
+      $recipients = array_merge($recipients, $this->contactLoader->getContacts($contactSelection, $rule->getPreferredLocationTypeId()));
     }
 
     return $recipients;

@@ -1,12 +1,13 @@
 <?php
+declare(strict_types = 1);
 
 namespace Civi\Notification\EventSubscriber;
 
 use Civi\Core\Event\PostEvent;
 use Civi\Core\Event\PreEvent;
 use Civi\Notification\Entity\RuleSetEntity;
+use Civi\Notification\EntityService\RuleSetManager;
 use Civi\Notification\Handler\RuleSetHandler;
-use Civi\Notification\Source\EntityManager;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,7 +25,7 @@ class NotificationSubscriberTest extends TestCase {
   protected function setUp(): void {
     $this->preEventMock = $this->createMock(PreEvent::class);
     $this->postEventMock = $this->createMock(PostEvent::class);
-    $this->entityManagerMock = $this->createMock(EntityManager::class);
+    $this->entityManagerMock = $this->createMock(RuleSetManager::class);
     $this->ruleSetHandlerMock = $this->createMock(RuleSetHandler::class);
     $this->ruleSetEntityMock = $this->createMock(RuleSetEntity::class);
 
@@ -32,11 +33,11 @@ class NotificationSubscriberTest extends TestCase {
 
     $reflection = new \ReflectionClass($this->notificationSubscriber);
     $propertyEntityManager = $reflection->getProperty('entityManager');
-    $propertyEntityManager->setAccessible(true);
+    $propertyEntityManager->setAccessible(TRUE);
     $propertyEntityManager->setValue($this->notificationSubscriber, $this->entityManagerMock);
 
     $propertyRuleSetHandler = $reflection->getProperty('ruleSetHandler');
-    $propertyRuleSetHandler->setAccessible(true);
+    $propertyRuleSetHandler->setAccessible(TRUE);
     $propertyRuleSetHandler->setValue($this->notificationSubscriber, $this->ruleSetHandlerMock);
   }
 
@@ -51,8 +52,8 @@ class NotificationSubscriberTest extends TestCase {
   }
 
   public function testOnPreEventCachesEntityState(): void {
-    $this->preEventMock->method('getHookValues')->willReturn([null, 'Entity', 123]);
-    $this->entityManagerMock->method('hasActiveRuleSets')->willReturn(true);
+    $this->preEventMock->method('getHookValues')->willReturn([NULL, 'Entity', 123]);
+    $this->entityManagerMock->method('hasActiveRuleSets')->willReturn(TRUE);
 
     //$this->setEntityCacheValue(['Entity' => [123 => ['field' => 'value_old']]]);
 
@@ -67,7 +68,7 @@ class NotificationSubscriberTest extends TestCase {
     $oldValues = ['field' => 'value_old'];
     $newValues = ['field' => 'value_new'];
 
-    $this->postEventMock->method('getHookValues')->willReturn([null, 'Entity', 123]);
+    $this->postEventMock->method('getHookValues')->willReturn([NULL, 'Entity', 123]);
 
     $this->setEntityCacheValue(['Entity' => [123 => $oldValues]]);
 
@@ -79,15 +80,15 @@ class NotificationSubscriberTest extends TestCase {
       ->method('evaluateRuleSet')
       ->with($this->ruleSetEntityMock, $newValues, $oldValues);
 
-//    $entityCache = $this->getEntityCache();
-//    $this->assertArrayHasKey('Entity', $entityCache);
-//    $this->notificationSubscriber->onPostCommit($this->postEventMock);
+    //    $entityCache = $this->getEntityCache();
+    //    $this->assertArrayHasKey('Entity', $entityCache);
+    //    $this->notificationSubscriber->onPostCommit($this->postEventMock);
   }
 
   private function setEntityCacheValue(array $value): void {
     $reflection = new \ReflectionClass(NotificationSubscriber::class);
     $property = $reflection->getProperty('entityCache');
-    $property->setAccessible(true);
+    $property->setAccessible(TRUE);
 
     $property->setValue($value);
   }
@@ -95,7 +96,7 @@ class NotificationSubscriberTest extends TestCase {
   private function getEntityCache(): array {
     $reflection = new \ReflectionClass(NotificationSubscriber::class);
     $property = $reflection->getProperty('entityCache');
-    $property->setAccessible(true);
+    $property->setAccessible(TRUE);
 
     return $property->getValue();
   }

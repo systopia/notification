@@ -49,7 +49,7 @@ return [
         'prefetch' => 'disabled',
       ],
     ],
-    'groups' => [
+    'group_ids' => [
       'title' => E::ts('Groups'),
       'sql_type' => 'varchar(255)',
       'input_type' => 'Select',

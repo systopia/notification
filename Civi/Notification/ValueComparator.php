@@ -2,25 +2,23 @@
 
 declare(strict_types = 1);
 
-namespace Civi\Notification\Source;
+namespace Civi\Notification;
+
+use Webmozart\Assert\Assert;
 
 class ValueComparator {
 
   /**
    * Compare two values based on the given operator.
-   *
-   * @param mixed $value1
-   * @param mixed $value2
-   * @param string $operator
-   * @return bool
    */
-  public function compareValues($value1, $value2, string $operator): bool {
+  public function compareValues(mixed $value1, string $operator, mixed $value2): bool {
     switch ($operator) {
       case '=':
         return $value1 == $value2;
 
       case 'IN':
-        return is_array($value1) && in_array($value2, $value1, TRUE);
+        assert(is_array($value2));
+        return in_array($value1, $value2, TRUE);
 
       default:
         throw new \InvalidArgumentException("Unsupported operator: $operator");

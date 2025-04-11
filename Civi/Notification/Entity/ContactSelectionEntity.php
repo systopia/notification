@@ -7,9 +7,9 @@ namespace Civi\Notification\Entity;
 /**
  * @phpstan-type contactSelectionEntityT array{
  *   id: int,
- *   contact_ids: array<string, int>,
- *   groups: array<string, int>,
- *   contact_type_ids: array<string, string>,
+ *   contact_ids: list<int>,
+ *   group_ids: list<int>,
+ *   contact_type_ids: list<int>,
  *   custom: ?array,
  * }
  *
@@ -18,21 +18,21 @@ namespace Civi\Notification\Entity;
 class ContactSelectionEntity extends AbstractEntity {
 
   /**
-   * @return array<string, int>
+   * @return list<int>
    */
   public function getContactIds(): array {
     return $this->entityValues['contact_ids'];
   }
 
   /**
-   * @return array<string, int>
+   * @return list<int>
    */
-  public function getGroups(): array {
-    return $this->entityValues['groups'];
+  public function getGroupIds(): array {
+    return $this->entityValues['group_ids'];
   }
 
   /**
-   * @return array<string, string>
+   * @return list<int>
    */
   public function getContactTypeIds(): array {
     return $this->entityValues['contact_type_ids'];

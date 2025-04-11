@@ -4,29 +4,29 @@ declare(strict_types = 1);
 
 namespace Civi\Notification\Handler;
 
+use Civi\Notification\Data\NotificationContext;
 use Civi\Notification\Entity\FieldMonitoringEntity;
-use Civi\Notification\Interface\FieldMonitoringHandlerInterface;
-use Civi\Notification\Source\ValueComparator;
+use Civi\Notification\ValueComparator;
 
 class FieldMonitoringHandler implements FieldMonitoringHandlerInterface {
 
   private ValueComparator $valueComparator;
 
-  public function __construct() {
-    $this->valueComparator = new ValueComparator();
+  public function __construct(ValueComparator $valueComparator) {
+    $this->valueComparator = $valueComparator;
   }
 
-  public function evaluate(FieldMonitoringEntity $fieldMonitoring, array $newValues, array $oldValues): bool {
+  public function evaluate(FieldMonitoringEntity $fieldMonitoring, NotificationContext $context): bool {
     $operatorBefore = $fieldMonitoring->getOperatorBefore();
-    $operatorAfter = $fieldMonitoring->getValueAfter();
+    $operatorAfter = $fieldMonitoring->getOperatorAfter();
     $conditionBeforeValue = $fieldMonitoring->getValueBefore();
     $conditionAfterValue = $fieldMonitoring->getValueAfter();
     $fieldName = $fieldMonitoring->getFieldName();
-    $newValue = $newValues[$fieldName] ?? NULL;
-    $oldValue = $oldValues[$fieldName] ?? NULL;
+    $newValue = $context->newValues[$fieldName] ?? NULL;
+    $oldValue = $context->oldValues[$fieldName] ?? NULL;
 
-    return $this->valueComparator->compareValues($conditionBeforeValue, $oldValue, $operatorBefore)
-      && $this->valueComparator->compareValues($conditionAfterValue, $newValue, $operatorAfter);
+    return $this->valueComparator->compareValues($oldValue, $operatorBefore, $conditionBeforeValue)
+      && $this->valueComparator->compareValues($newValue, $operatorAfter, $conditionAfterValue);
   }
 
 }

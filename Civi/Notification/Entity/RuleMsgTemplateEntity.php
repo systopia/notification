@@ -8,7 +8,7 @@ namespace Civi\Notification\Entity;
  * @phpstan-type ruleMsgTemplateEntityT array{
  *   id: int,
  *   msg_template_id: int,
- *   languages: array<string, string>,
+ *   languages: list<string>,
  * }
  *
  * @phpstan-extends AbstractEntity<ruleMsgTemplateEntityT>
@@ -23,7 +23,7 @@ class RuleMsgTemplateEntity extends AbstractEntity {
   }
 
   /**
-   * @return array<string, string>
+   * @return list<string>
    */
   public function getLanguages(): array {
     return $this->entityValues['languages'];

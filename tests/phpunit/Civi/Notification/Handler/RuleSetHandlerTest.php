@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Civi\Notification\Handler;
 
@@ -27,15 +28,15 @@ class RuleSetHandlerTest extends TestCase {
     // Use reflection to set the private RuleHandler property
     $reflection = new \ReflectionClass($this->ruleSetHandler);
     $property = $reflection->getProperty('ruleHandler');
-    $property->setAccessible(true);
+    $property->setAccessible(TRUE);
     $property->setValue($this->ruleSetHandler, $this->ruleHandlerMock);
   }
 
   public function testEvaluateRuleSetExecutesRulesCorrectly(): void {
     $this->ruleSetEntityMock->method('getRules')->willReturn([$this->ruleEntityMock]);
-    $this->ruleSetEntityMock->method('isExecuteOnlyFirstRule')->willReturn(false);
-    $this->ruleHandlerMock->method('evaluateRule')->willReturn(true);
-    $this->ruleEntityMock->method('isStopAfterThisRule')->willReturn(false);
+    $this->ruleSetEntityMock->method('isExecuteOnlyFirstRule')->willReturn(FALSE);
+    $this->ruleHandlerMock->method('evaluateRule')->willReturn(TRUE);
+    $this->ruleEntityMock->method('isStopAfterThisRule')->willReturn(FALSE);
 
     $newValues = ['field' => 'value_old'];
     $oldValues = ['field' => 'value_new'];
@@ -49,7 +50,7 @@ class RuleSetHandlerTest extends TestCase {
 
   public function testEvaluateRuleSetDoesNotEvaluateIfRuleIsNotMatched(): void {
     $this->ruleSetEntityMock->method('getRules')->willReturn([$this->ruleEntityMock]);
-    $this->ruleHandlerMock->method('evaluateRule')->willReturn(false);
+    $this->ruleHandlerMock->method('evaluateRule')->willReturn(FALSE);
 
     $newValues = ['field' => 'value_old'];
     $oldValues = ['field' => 'value_new'];
@@ -60,4 +61,5 @@ class RuleSetHandlerTest extends TestCase {
       ->method('evaluateRule')
       ->with($this->ruleEntityMock, $newValues, $oldValues);
   }
+
 }

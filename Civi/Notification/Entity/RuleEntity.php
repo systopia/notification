@@ -13,11 +13,11 @@ use Civi\Api4\NotificationRuleMessageTemplate;
  * @phpstan-type ruleEntityT array{
  *   id: int,
  *   preferred_location_type_id: int|null,
- *   email_addresses: array<string, string>|null,
+ *   email_addresses: list<string>|null,
  *   is_active: bool,
  *   is_respect_communication_suspension: bool,
  *   is_stop_after_this_rule: bool,
- *   weight: int|null,
+ *   weight: int,
  * }
  *
  * @phpstan-extends AbstractEntity<ruleEntityT>
@@ -25,44 +25,39 @@ use Civi\Api4\NotificationRuleMessageTemplate;
 class RuleEntity extends AbstractEntity {
 
   /**
-   * @return int|null
+   * @var list<ConditionEntity>
    */
+  private array $conditions = [];
+
+  /**
+   * @var list<ContactSelectionEntity>
+   */
+  private array $contactSelections = [];
+
   public function getPreferredLocationTypeId(): ?int {
     return $this->entityValues['preferred_location_type_id'];
   }
 
   /**
-   * @return array<string, string>|null
+   * @return list<string>|null
    */
   public function getEmailAddresses(): ?array {
     return $this->entityValues['email_addresses'];
   }
 
-  /**
-   * @return bool
-   */
   public function isActive(): bool {
     return $this->entityValues['is_active'];
   }
 
-  /**
-   * @return bool
-   */
   public function isRespectCommunicationSuspension(): bool {
     return $this->entityValues['is_respect_communication_suspension'];
   }
 
-  /**
-   * @return bool
-   */
   public function isStopAfterThisRule(): bool {
     return $this->entityValues['is_stop_after_this_rule'];
   }
 
-  /**
-   * @return int|null
-   */
-  public function getWeight(): ?int {
+  public function getWeight(): int {
     return $this->entityValues['weight'];
   }
 

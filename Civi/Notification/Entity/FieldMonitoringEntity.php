@@ -9,47 +9,32 @@ namespace Civi\Notification\Entity;
  *   id: int,
  *   field_name: string,
  *   operator_before: string,
- *   value_before: string,
+ *   value_before: mixed,
  *   operator_after: string,
- *   value_after: string,
+ *   value_after: mixed,
  * }
  *
  * @phpstan-extends AbstractEntity<fieldMonitoringEntityT>
  */
 class FieldMonitoringEntity extends AbstractEntity {
 
-  /**
-   * @return string
-   */
   public function getFieldName(): string {
     return $this->entityValues['field_name'];
   }
 
-  /**
-   * @return string
-   */
   public function getOperatorBefore(): string {
     return $this->entityValues['operator_before'];
   }
 
-  /**
-   * @return string
-   */
-  public function getValueBefore(): string {
+  public function getValueBefore(): mixed {
     return $this->entityValues['value_before'];
   }
 
-  /**
-   * @return string
-   */
   public function getOperatorAfter(): string {
     return $this->entityValues['operator_after'];
   }
 
-  /**
-   * @return string
-   */
-  public function getValueAfter(): string {
+  public function getValueAfter(): mixed {
     return $this->entityValues['value_after'];
   }
 

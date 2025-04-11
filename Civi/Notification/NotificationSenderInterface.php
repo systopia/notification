@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Civi\Notification\Interface;
+namespace Civi\Notification;
 
-use Civi\Notification\Entity\NotificationRecipient;
+use Civi\Notification\Data\NotificationRecipient;
 
 interface NotificationSenderInterface {
 

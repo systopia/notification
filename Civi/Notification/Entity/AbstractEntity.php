@@ -12,22 +12,19 @@ namespace Civi\Notification\Entity;
 abstract class AbstractEntity {
 
   /**
-   * @var T
+   * @phpstan-var T
    */
   protected array $entityValues;
 
   /**
-   * @param T $entityValues
+   * @phpstan-param T $entityValues
    */
   public function __construct(array $entityValues) {
     $this->entityValues = $entityValues;
   }
 
-  /**
-   * @return int
-   */
   public function getId(): int {
-    /** @phpstan-ignore-next-line  */
+    // @phpstan-ignore return.type
     return $this->entityValues['id'];
   }
 

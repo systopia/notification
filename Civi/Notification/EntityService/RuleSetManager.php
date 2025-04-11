@@ -2,13 +2,18 @@
 
 declare(strict_types = 1);
 
-namespace Civi\Notification\Source;
+namespace Civi\Notification\EntityService;
 
 use Civi\Api4\NotificationRuleSet;
 use Civi\Notification\Entity\RuleSetEntity;
 
-class EntityManager {
+class RuleSetManager {
 
+  /**
+   * @return list<RuleSetEntity>
+   *
+   * @throws \CRM_Core_Exception
+   */
   public function loadRuleSetByEntityType(string $entityType): array {
     $notificationRuleSets = NotificationRuleSet::get(FALSE)
       ->addSelect('*')

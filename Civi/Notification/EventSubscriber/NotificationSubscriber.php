@@ -7,82 +7,100 @@ namespace Civi\Notification\EventSubscriber;
 use Civi\API\Request;
 use Civi\Core\Event\PostEvent;
 use Civi\Core\Event\PreEvent;
+use Civi\Notification\Data\NotificationContext;
+use Civi\Notification\EntityService\RuleSetManager;
 use Civi\Notification\Handler\RuleSetHandler;
-use Civi\Notification\Source\EntityManager;
+use Civi\Notification\Handler\RuleSetHandlerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ * @phpstan-import-type changeSetT from NotificationContext
+ */
 final class NotificationSubscriber implements EventSubscriberInterface {
 
   /**
-   * Store the entity's old state in a cache.
-   *
-   * @var array<array-key, array<array-key, array<string, mixed>>>
+   * @phpstan-var array<string, array<int, array{
+   *   oldValues: array<string, mixed>,
+   *   newValues: array<string, mixed>,
+   *   changeSet: changeSetT
+   * }>>
+   * The first keys are entity name and entity ID.
    */
-  private static array $entityCache = [];
+  private array $entityCache = [];
 
-  private EntityManager $entityManager;
-  private RuleSetHandler $ruleSetHandler;
-
-  public function __construct() {
-    $this->entityManager = new EntityManager();
-    $this->ruleSetHandler = new RuleSetHandler();
-  }
+  public function __construct(
+    private RuleSetManager $entityManager,
+    private RuleSetHandlerInterface $ruleSetHandler
+  ) {}
 
   public static function getSubscribedEvents(): array {
     return [
-      'hook_civicrm_pre' => 'onPre',
+      // Minimum priority because previous listeners could change the data.
+      'hook_civicrm_pre' => ['onPre', PHP_INT_MIN],
       'hook_civicrm_postCommit' => 'onPostCommit',
     ];
   }
 
   public function onPre(PreEvent $event): void {
-    [, $entity, $id] = $event->getHookValues();
+    // @todo What about 'create' and 'delete'?
+    if ('edit' === $event->action && $event->id !== NULL) {
+      if ($this->entityManager->hasActiveRuleSets($event->entity)) {
+        // Capture old values before the change
+        // @todo Also load custom values. (At least those in $event->params.)
+        $oldValues = $this->loadEntityValues($event->entity, $event->id);
+        $newValues = $event->params + $oldValues;
+        unset($newValues['custom']);
 
-    if ($this->entityManager->hasActiveRuleSets($entity) && $id !== NULL) {
-      // Capture old values before the change
-      $oldValues = $this->loadEntityValues($entity, $id);
+        $changed = array_diff_assoc($newValues, $oldValues);
+        if ([] !== $changed) {
+          $changeSet = [];
+          foreach (array_keys($changed) as $fieldName) {
+            $changeSet[$fieldName] = [$oldValues[$fieldName], $newValues[$fieldName]];
+          }
 
-      // Store the entity's old state in a cache
-      self::$entityCache[$entity][$id] = $oldValues;
+          $this->entityCache[$event->entity][$event->id] = [
+            'oldValues' => $oldValues,
+            'newValues' => $newValues,
+            'changeSet' => $changeSet
+          ];
+        }
+      }
     }
   }
 
   public function onPostCommit(PostEvent $event): void {
-    [, $entity, $id] = $event->getHookValues();
+    // Check if old values exist for this entity in the cache.
+    if (isset($this->entityCache[$event->entity][$event->id])) {
+      [$oldValues, $newValues, $changeSet] = [
+        $this->entityCache[$event->entity][$event->id]['oldValues'],
+        $this->entityCache[$event->entity][$event->id]['newValues'],
+        $this->entityCache[$event->entity][$event->id]['changeSet'],
+      ];
+      unset($this->entityCache[$event->entity][$event->id]);
 
-    // Check if old values exist for this entity in the cache
-    if (isset(self::$entityCache[$entity][$id])) {
-      $oldValues = self::$entityCache[$entity][$id];
-      // Retrieve new values after the change
-      $newValues = $this->loadEntityValues($entity, $id);
-
-      $ruleSets = $this->entityManager->loadRuleSetByEntityType($entity);
-
+      $ruleSets = $this->entityManager->loadRuleSetByEntityType($event->entity);
       foreach ($ruleSets as $ruleSet) {
-        $this->ruleSetHandler->evaluateRuleSet($ruleSet, $newValues, $oldValues);
+        $this->ruleSetHandler->evaluateRuleSet($ruleSet, new NotificationContext($oldValues, $newValues, $changeSet));
       }
-
-      // Clean up cache after processing
-      unset(self::$entityCache[$entity][$id]);
     }
   }
 
   /**
    * Load entity values from the database.
    *
-   * @param string $entityType
-   * @param int $entityID
    * @return array<string, mixed>
+   *
+   * @throws \CRM_Core_Exception
    */
-  private function loadEntityValues(string $entityType, int $entityID): array {
+  private function loadEntityValues(string $entityType, int $entityId): array {
     /** @var \Civi\Api4\Generic\AbstractAction $apiRequest */
     $apiRequest = Request::create($entityType, 'get', [
       'version' => 4,
-      'where' => [['id', '=', $entityID]],
+      'where' => [['id', '=', $entityId]],
     ]);
     $result = $apiRequest->execute();
 
-    return $result->first() ?? [];
+    return $result->single();
   }
 
 }

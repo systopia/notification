@@ -4,22 +4,22 @@ declare(strict_types = 1);
 
 namespace Civi\Notification\Handler;
 
+use Civi\Notification\Data\NotificationContext;
 use Civi\Notification\Entity\RuleSetEntity;
-use Civi\Notification\Interface\RuleSetHandlerInterface;
 
 class RuleSetHandler implements RuleSetHandlerInterface {
 
-  private RuleHandler $ruleHandler;
+  private RuleHandlerInterface $ruleHandler;
 
-  public function __construct() {
-    $this->ruleHandler = new RuleHandler();
+  public function __construct(RuleHandlerInterface $ruleHandler) {
+    $this->ruleHandler = $ruleHandler;
   }
 
-  public function evaluateRuleSet(RuleSetEntity $ruleSet, array $newValues, array $oldValues): void {
-    // TODO: Add logic to check if rule set entity conditions are met (source_entity_type, source_entity_id)
+  public function evaluateRuleSet(RuleSetEntity $ruleSet, NotificationContext $context): void {
+    // @todo Allow implementations specific to rule set.
 
     foreach ($ruleSet->getRules() as $rule) {
-      if ($this->ruleHandler->evaluateRule($rule, $newValues, $oldValues)) {
+      if ($this->ruleHandler->evaluateRule($rule, $context)) {
         if ($ruleSet->isExecuteOnlyFirstRule() || $rule->isStopAfterThisRule()) {
           break;
         }

@@ -1,10 +1,13 @@
 <?php
+declare(strict_types = 1);
 
+namespace Civi\Notification\Source;
+
+use Civi\Notification\ValueComparator;
 use PHPUnit\Framework\TestCase;
-use Civi\Notification\Source\ValueComparator;
 
 /**
- * @covers \Civi\Notification\Source\ValueComparator
+ * @covers \Civi\Notification\ValueComparator
  */
 class ValueComparatorTest extends TestCase {
 
@@ -21,7 +24,7 @@ class ValueComparatorTest extends TestCase {
     $value2 = 10;
     $operator = '=';
 
-    $result = $this->valueComparator->compareValues($value1, $value2, $operator);
+    $result = $this->valueComparator->compareValues($value2, $operator, $value1);
     $this->assertTrue($result);
   }
 
@@ -30,7 +33,7 @@ class ValueComparatorTest extends TestCase {
     $value2 = '10';
     $operator = '=';
 
-    $result = $this->valueComparator->compareValues($value1, $value2, $operator);
+    $result = $this->valueComparator->compareValues($value2, $operator, $value1);
     $this->assertFalse($result);
   }
 
@@ -39,7 +42,7 @@ class ValueComparatorTest extends TestCase {
     $value2 = 2;
     $operator = 'IN';
 
-    $result = $this->valueComparator->compareValues($value1, $value2, $operator);
+    $result = $this->valueComparator->compareValues($value2, $operator, $value1);
     $this->assertTrue($result);
   }
 
@@ -48,7 +51,7 @@ class ValueComparatorTest extends TestCase {
     $value2 = 10;
     $operator = 'IN';
 
-    $result = $this->valueComparator->compareValues($value1, $value2, $operator);
+    $result = $this->valueComparator->compareValues($value2, $operator, $value1);
     $this->assertFalse($result);
   }
 
@@ -59,6 +62,7 @@ class ValueComparatorTest extends TestCase {
     $value2 = 20;
     $operator = 'INVALID_OPERATOR';
 
-    $this->valueComparator->compareValues($value1, $value2, $operator);
+    $this->valueComparator->compareValues($value2, $operator, $value1);
   }
+
 }

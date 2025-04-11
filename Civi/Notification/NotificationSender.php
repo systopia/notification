@@ -2,22 +2,21 @@
 
 declare(strict_types = 1);
 
-namespace Civi\Notification\Source;
+namespace Civi\Notification;
 
-use Civi\Notification\Entity\NotificationRecipient;
-use Civi\Notification\Interface\NotificationSenderInterface;
+use Civi\Notification\Data\NotificationRecipient;
 
 class NotificationSender implements NotificationSenderInterface {
 
   public function sendNotification(int $msgTemplateId, NotificationRecipient $recipient, array $tokenContext): void {
-    $tokenContext['contactId'] = $recipient->getId();
+    $tokenContext['contactId'] = $recipient->getContactId();
 
     [$fromName, $fromEmail] = \CRM_Core_BAO_Domain::getNameAndEmail();
 
     $sendTemplateParams = [
       'messageTemplateID' => $msgTemplateId,
       'from' => ($fromName ?? '') . ' <' . $fromEmail . '>',
-      'toName' => $recipient->getDisplayName(),
+      'toName' => $recipient->getName(),
       'toEmail' => $recipient->getEmail(),
       'tokenContext' => $tokenContext,
     ];
