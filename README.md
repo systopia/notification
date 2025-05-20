@@ -77,8 +77,6 @@ The engine is designed to be easily extended to support additional entities and 
 
 ## Security & Compliance
 
-- Fully compliant with **GDPR**.
-- Notifications are only sent to contacts with **valid legal basis**.
 - UI access will be controlled via **CiviCRM permission management**.
 
 ---
