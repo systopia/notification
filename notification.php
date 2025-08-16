@@ -7,7 +7,6 @@ require_once 'notification.civix.php';
 
 use Symfony\Component\Config\Resource\FileResource;
 use Symfony\Component\Config\Resource\GlobResource;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
  * Implements hook_civicrm_config().
@@ -18,7 +17,7 @@ function notification_civicrm_config(\CRM_Core_Config $config): void {
   _notification_civix_civicrm_config($config);
 }
 
-function notification_civicrm_container(ContainerBuilder $container): void {
+function notification_civicrm_container(\Symfony\Component\DependencyInjection\ContainerBuilder $container): void {
   $globResource = new GlobResource(__DIR__ . '/services', '/*.php', FALSE);
   // Container will be rebuilt if a *.php file is added to services
   $container->addResource($globResource);
@@ -45,4 +44,22 @@ function notification_civicrm_install(): void {
  */
 function notification_civicrm_enable(): void {
   _notification_civix_civicrm_enable();
+}
+
+function notification_civicrm_pre(string $op, string $objectName, int|string|null $id, array &$params): void {
+  $handler = \Civi::container()->get('notification.hook_handler');
+  $handler->onPre((string) $op, (string) $objectName, $id, $params);
+}
+
+function notification_civicrm_post(string $op, string $objectName, int|string|null $objectId, mixed &$objectRef): void {
+  $handler = \Civi::container()->get('notification.hook_handler');
+  $handler->onPost((string) $op, (string) $objectName, $objectId, $objectRef);
+}
+
+function notification_civicrm_postCommit(string $op,
+  string $objectName,
+  int|string|null $objectId,
+  mixed &$objectRef): void {
+  $handler = \Civi::container()->get('notification.hook_handler');
+  $handler->onPostCommit((string) $op, (string) $objectName, $objectId, $objectRef);
 }

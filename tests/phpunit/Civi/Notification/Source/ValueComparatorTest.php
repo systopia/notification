@@ -4,65 +4,56 @@ declare(strict_types = 1);
 namespace Civi\Notification\Source;
 
 use Civi\Notification\ValueComparator;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Civi\Notification\ValueComparator
- */
-class ValueComparatorTest extends TestCase {
+final class ValueComparatorTest extends TestCase {
 
-  private ValueComparator $valueComparator;
-
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->valueComparator = new ValueComparator();
-  }
-
+  /**
+   * @covers \Civi\Notification\ValueComparator::compare
+   */
   public function testCompareEqualValues(): void {
-    $value1 = 10;
-    $value2 = 10;
-    $operator = '=';
-
-    $result = $this->valueComparator->compareValues($value2, $operator, $value1);
-    $this->assertTrue($result);
+    $cmp = new ValueComparator();
+    $this->assertTrue($cmp->compare('==', 'foo', 'foo'));
+    $this->assertTrue($cmp->compare('=', 'foo', 'foo'));
   }
 
+  /**
+   * @covers \Civi\Notification\ValueComparator::compare
+   */
   public function testCompareUnequalValues(): void {
-    $value1 = 10;
-    $value2 = '10';
-    $operator = '=';
-
-    $result = $this->valueComparator->compareValues($value2, $operator, $value1);
-    $this->assertFalse($result);
+    $cmp = new ValueComparator();
+    $this->assertFalse($cmp->compare('==', 'foo', 'bar'));
+    $this->assertTrue($cmp->compare('!=', 'foo', 'bar'));
   }
 
+  /**
+   * @covers \Civi\Notification\ValueComparator::compare
+   */
   public function testCompareInOperatorWithArray(): void {
-    $value1 = [1, 2, 3];
-    $value2 = 2;
-    $operator = 'IN';
-
-    $result = $this->valueComparator->compareValues($value2, $operator, $value1);
-    $this->assertTrue($result);
+    $cmp = new ValueComparator();
+    $this->assertTrue($cmp->compare('in', 2, [1, 2, 3]));
+    $this->assertFalse($cmp->compare('in', 4, [1, 2, 3]));
   }
 
+  /**
+   * @covers \Civi\Notification\ValueComparator::compare
+   */
   public function testCompareInOperatorWithNonArray(): void {
-    $value1 = 10;
-    $value2 = 10;
-    $operator = 'IN';
+    $cmp = new ValueComparator();
 
-    $result = $this->valueComparator->compareValues($value2, $operator, $value1);
-    $this->assertFalse($result);
+    $this->expectException(\TypeError::class);
+    $cmp->compare('in', 1, 123);
   }
 
+  /**
+   * @covers \Civi\Notification\ValueComparator::compare
+   */
   public function testInvalidOperatorThrowsException(): void {
-    $this->expectException(\InvalidArgumentException::class);
+    $cmp = new ValueComparator();
 
-    $value1 = 10;
-    $value2 = 20;
-    $operator = 'INVALID_OPERATOR';
-
-    $this->valueComparator->compareValues($value2, $operator, $value1);
+    $this->expectException(InvalidArgumentException::class);
+    $cmp->compare('^', 'a', 'b');
   }
 
 }

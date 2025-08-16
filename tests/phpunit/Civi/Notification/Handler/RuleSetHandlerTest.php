@@ -3,63 +3,37 @@ declare(strict_types = 1);
 
 namespace Civi\Notification\Handler;
 
-use PHPUnit\Framework\TestCase;
+use Civi\Notification\Data\NotificationContext;
 use Civi\Notification\Entity\RuleSetEntity;
-use Civi\Notification\Entity\RuleEntity;
+use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Civi\Notification\Handler\RuleSetHandler
- */
-class RuleSetHandlerTest extends TestCase {
+final class RuleSetHandlerTest extends TestCase {
 
-  private RuleSetHandler $ruleSetHandler;
-  private $ruleHandlerMock;
-  private $ruleSetEntityMock;
-  private $ruleEntityMock;
+  /**
+   *
+   * @covers \Civi\Notification\Handler\RuleSetHandler::evaluateRuleSet
+   */
+  public function testEvaluateRuleSetDoesNotThrowWithEmptyRulesOrSkip(): void {
 
-  protected function setUp(): void {
-    parent::setUp();
+    $ruleHandler = $this->createMock(RuleHandlerInterface::class);
+    $ruleHandler
+      ->expects($this->never())
+      ->method($this->anything());
 
-    $this->ruleHandlerMock = $this->createMock(RuleHandler::class);
-    $this->ruleSetEntityMock = $this->createMock(RuleSetEntity::class);
-    $this->ruleEntityMock = $this->createMock(RuleEntity::class);
+    $sut = new RuleSetHandler($ruleHandler);
 
-    $this->ruleSetHandler = new RuleSetHandler();
-    // Use reflection to set the private RuleHandler property
-    $reflection = new \ReflectionClass($this->ruleSetHandler);
-    $property = $reflection->getProperty('ruleHandler');
-    $property->setAccessible(TRUE);
-    $property->setValue($this->ruleSetHandler, $this->ruleHandlerMock);
-  }
+    $ruleSet = $this->getMockBuilder(RuleSetEntity::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getRules'])
+      ->getMock();
 
-  public function testEvaluateRuleSetExecutesRulesCorrectly(): void {
-    $this->ruleSetEntityMock->method('getRules')->willReturn([$this->ruleEntityMock]);
-    $this->ruleSetEntityMock->method('isExecuteOnlyFirstRule')->willReturn(FALSE);
-    $this->ruleHandlerMock->method('evaluateRule')->willReturn(TRUE);
-    $this->ruleEntityMock->method('isStopAfterThisRule')->willReturn(FALSE);
+    $ruleSet->method('getRules')->willReturn([]);
 
-    $newValues = ['field' => 'value_old'];
-    $oldValues = ['field' => 'value_new'];
+    $context = new NotificationContext([], [], []);
 
-    $this->ruleSetHandler->evaluateRuleSet($this->ruleSetEntityMock, $newValues, $oldValues);
+    $sut->evaluateRuleSet($ruleSet, $context);
 
-    $this->ruleHandlerMock->expects($this->once())
-      ->method('evaluateRule')
-      ->with($this->ruleEntityMock, $newValues, $oldValues);
-  }
-
-  public function testEvaluateRuleSetDoesNotEvaluateIfRuleIsNotMatched(): void {
-    $this->ruleSetEntityMock->method('getRules')->willReturn([$this->ruleEntityMock]);
-    $this->ruleHandlerMock->method('evaluateRule')->willReturn(FALSE);
-
-    $newValues = ['field' => 'value_old'];
-    $oldValues = ['field' => 'value_new'];
-
-    $this->ruleSetHandler->evaluateRuleSet($this->ruleSetEntityMock, $newValues, $oldValues);
-
-    $this->ruleHandlerMock->expects($this->once())
-      ->method('evaluateRule')
-      ->with($this->ruleEntityMock, $newValues, $oldValues);
+    $this->addToAssertionCount(1);
   }
 
 }

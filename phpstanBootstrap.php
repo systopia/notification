@@ -45,3 +45,8 @@ foreach ($bootstrapFiles as $bootstrapFile) {
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
   require_once __DIR__ . '/vendor/autoload.php';
 }
+
+$stub = __DIR__ . '/tools/phpstan/stubs/civicrm-core-stubs.php';
+if (is_file($stub)) {
+  require_once $stub;
+}

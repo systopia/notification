@@ -7,7 +7,6 @@ namespace Civi\Notification\EntityService;
 use Civi\Api4\Contact;
 use Civi\Notification\Data\NotificationRecipient;
 use Civi\Notification\Entity\ContactSelectionEntity;
-use Civi\Notification\Entity\RuleEntity;
 
 final class ContactLoader implements ContactLoaderInterface {
 

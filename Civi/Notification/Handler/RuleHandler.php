@@ -12,7 +12,7 @@ use Civi\Notification\MsgTemplateDeterminerInterface;
 use Civi\Notification\NotificationSenderInterface;
 use Civi\Notification\TokenContextGeneratorInterface;
 
-final class RuleHandler implements RuleHandlerInterface {
+class RuleHandler implements RuleHandlerInterface {
 
   public function __construct(
     private RuleMatchCheckerInterface $ruleMatchChecker,
@@ -54,7 +54,9 @@ final class RuleHandler implements RuleHandlerInterface {
 
     $recipients = [];
     foreach ($rule->getContactSelections() as $contactSelection) {
-      $recipients = array_merge($recipients, $this->contactLoader->getContacts($contactSelection, $rule->getPreferredLocationTypeId()));
+      $recipients = array_merge($recipients,
+           $this->contactLoader->getContacts($contactSelection,
+           $rule->getPreferredLocationTypeId()));
     }
 
     return $recipients;

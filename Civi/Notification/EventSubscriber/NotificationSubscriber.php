@@ -8,9 +8,7 @@ use Civi\API\Request;
 use Civi\Core\Event\PostEvent;
 use Civi\Core\Event\PreEvent;
 use Civi\Notification\Data\NotificationContext;
-use Civi\Notification\EntityService\RuleSetManager;
 use Civi\Notification\Handler\RuleSetHandler;
-use Civi\Notification\Handler\RuleSetHandlerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -28,10 +26,40 @@ final class NotificationSubscriber implements EventSubscriberInterface {
    */
   private array $entityCache = [];
 
-  public function __construct(
-    private RuleSetManager $entityManager,
-    private RuleSetHandlerInterface $ruleSetHandler
-  ) {}
+  /**
+   * @var mixed */
+  private $ruleSetHandler;
+  /**
+   * @var mixed */
+  private $entityManager;
+
+  /**
+   * @param mixed|null $ruleSetHandler
+   * @param mixed|null $entityManager
+   */
+  public function __construct($ruleSetHandler = NULL, $entityManager = NULL) {
+    $this->ruleSetHandler = $ruleSetHandler;
+    $this->entityManager  = $entityManager;
+
+    try {
+      $container = \Civi::container();
+      if ($this->ruleSetHandler === NULL
+        && \is_object($container)
+        && \method_exists($container, 'has')
+        && $container->has('notification.rule_set_handler')) {
+        $this->ruleSetHandler = $container->get('notification.rule_set_handler');
+      }
+      if ($this->entityManager === NULL
+        && \is_object($container)
+        && \method_exists($container, 'has')
+        && $container->has('notification.entity_manager')) {
+        $this->entityManager = $container->get('notification.entity_manager');
+      }
+    }
+    catch (\Throwable $e) {
+
+    }
+  }
 
   public static function getSubscribedEvents(): array {
     return [
@@ -42,7 +70,9 @@ final class NotificationSubscriber implements EventSubscriberInterface {
   }
 
   public function onPre(PreEvent $event): void {
-    // @todo What about 'create' and 'delete'?
+    if ($this->entityManager === NULL || $this->ruleSetHandler === NULL) {
+      return;
+    }
     if ('edit' === $event->action && $event->id !== NULL) {
       if ($this->entityManager->hasActiveRuleSets($event->entity)) {
         // Capture old values before the change
@@ -61,7 +91,7 @@ final class NotificationSubscriber implements EventSubscriberInterface {
           $this->entityCache[$event->entity][$event->id] = [
             'oldValues' => $oldValues,
             'newValues' => $newValues,
-            'changeSet' => $changeSet
+            'changeSet' => $changeSet,
           ];
         }
       }
@@ -69,6 +99,9 @@ final class NotificationSubscriber implements EventSubscriberInterface {
   }
 
   public function onPostCommit(PostEvent $event): void {
+    if ($this->entityManager === NULL || $this->ruleSetHandler === NULL) {
+      return;
+    }
     // Check if old values exist for this entity in the cache.
     if (isset($this->entityCache[$event->entity][$event->id])) {
       [$oldValues, $newValues, $changeSet] = [

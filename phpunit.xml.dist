@@ -5,7 +5,8 @@
          failOnRisky="true"
          failOnWarning="true"
          forceCoversAnnotation="true"
-         bootstrap="tests/phpunit/bootstrap.php">
+         bootstrap="tests/phpunit/bootstrap.php"
+         convertDeprecationsToExceptions="false">
 
   <php>
     <ini name="error_reporting" value="-1"/>

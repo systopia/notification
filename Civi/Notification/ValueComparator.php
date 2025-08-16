@@ -1,27 +1,36 @@
 <?php
-
 declare(strict_types = 1);
 
 namespace Civi\Notification;
 
-use Webmozart\Assert\Assert;
-
-class ValueComparator {
+final class ValueComparator {
 
   /**
-   * Compare two values based on the given operator.
+   *
+   * @param string $operator Operator ('=', '==', '!=', '<>', 'in').
+   * @param mixed $left
+   * @param mixed $right
+   *
+   * @return bool
+   *
+   * @throws \InvalidArgumentException If operator is not correct
    */
-  public function compareValues(mixed $value1, string $operator, mixed $value2): bool {
-    switch ($operator) {
+  public function compare(string $operator, $left, $right): bool {
+    switch (strtolower($operator)) {
       case '=':
-        return $value1 == $value2;
+      case '==':
+        return $left == $right;
 
-      case 'IN':
-        assert(is_array($value2));
-        return in_array($value1, $value2, TRUE);
+      case '!=':
+      case '<>':
+        return $left != $right;
+
+      case 'in':
+
+        return \in_array($left, $right, TRUE);
 
       default:
-        throw new \InvalidArgumentException("Unsupported operator: $operator");
+        throw new \InvalidArgumentException("Unsupported operator '{$operator}'");
     }
   }
 

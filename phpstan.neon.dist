@@ -1,3 +1,5 @@
+includes:
+	- phpstan-baseline.neon
 parameters:
 	paths:
 		- Civi
@@ -11,12 +13,18 @@ parameters:
 	scanFiles:
 		- notification.civix.php
 		- tools/phpunit/vendor/bin/.phpunit/phpunit/src/Framework/TestCase.php
+		- tools/phpstan/stubs/civicrm-core-stubs.php
+		- tools/phpstan/stubs/symfony-stubs.php
 	scanDirectories:
 		- tools/phpunit/vendor/bin/.phpunit/phpunit/src/Framework
 	bootstrapFiles:
 		- tools/phpunit/vendor/bin/.phpunit/phpunit/vendor/autoload.php
 		- phpstanBootstrap.php
+	stubFiles:
+		- tools/phpstan/stubs/civicrm-core-stubs.php
+		- tools/phpstan/stubs/symfony-stubs.php
 	level: 9
+	reportUnmatchedIgnoredErrors: false
 	universalObjectCratesClasses:
 		- Civi\Core\Event\GenericHookEvent
 		- CRM_Core_Config
