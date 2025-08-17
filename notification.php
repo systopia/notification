@@ -17,12 +17,15 @@ function notification_civicrm_config(\CRM_Core_Config $config): void {
   _notification_civix_civicrm_config($config);
 }
 
-function notification_civicrm_container(\Symfony\Component\DependencyInjection\ContainerBuilder $container): void {
-  $globResource = new GlobResource(__DIR__ . '/services', '/*.php', FALSE);
-  // Container will be rebuilt if a *.php file is added to services
-  $container->addResource($globResource);
-  foreach ($globResource->getIterator() as $path => $info) {
-    // Container will be rebuilt if file changes
+/**
+ * Register PHP service definitions from services/*.php
+ *
+ * @param \Symfony\Component\DependencyInjection\ContainerBuilder $container
+ */
+function notification_civicrm_container($container): void {
+  $glob = new GlobResource(__DIR__ . '/services', '/*.php', FALSE);
+  $container->addResource($glob);
+  foreach ($glob->getIterator() as $path => $info) {
     $container->addResource(new FileResource($path));
     require $path;
   }
