@@ -3,16 +3,17 @@ declare(strict_types=1);
 
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /** @var \Symfony\Component\DependencyInjection\ContainerBuilder $container */
 
 // Snapshot store
 $container->setDefinition(
   'notification.snapshot_store',
-  (new Definition(\Civi\Notification\Snapshot\SnapshotStore::class))
+  new Definition(\Civi\Notification\Snapshot\SnapshotStore::class)
 );
 
-// EventFactory
+// EventFactory (+ alias to interface)
 $container->setDefinition(
   'notification.event_factory',
   (new Definition(\Civi\Notification\Event\EventFactory::class))
@@ -20,9 +21,20 @@ $container->setDefinition(
 );
 $container->setAlias(\Civi\Notification\Event\EventFactoryInterface::class, 'notification.event_factory');
 
+// Base queue (CiviQueue) — solo enqueue
 $container->setDefinition(
   'notification.queue',
-  (new Definition(\Civi\Notification\Queue\CiviQueue::class))
+  new Definition(\Civi\Notification\Queue\CiviQueue::class)
+);
+
+$container->setDefinition(
+  'notification.queue.draining',
+  new Definition(\Civi\Notification\Support\InMemoryQueue::class)
+);
+
+$container->setAlias(
+  \Civi\Notification\Queue\DrainingQueueInterface::class,
+  'notification.queue.draining'
 );
 
 // Enqueuer
@@ -46,10 +58,8 @@ $container->setDefinition(
 
 $container->setDefinition(
   'notification.rule_handler',
-  (new Definition(\Civi\Notification\Handler\RuleHandler::class))
-// ->setArguments([...])
+  new Definition(\Civi\Notification\Handler\RuleHandler::class)
 );
-
 $container->setDefinition(
   'notification.rule_set_handler',
   (new Definition(\Civi\Notification\Handler\RuleSetHandler::class))
@@ -57,22 +67,25 @@ $container->setDefinition(
 );
 
 $container->setDefinition(
-  'notification.entity_manager',
-  (new Definition(\Civi\Notification\EntityService\RuleSetManager::class))
-)->setPublic(true);
+  'notification.runner',
+  (new Definition(\Civi\Notification\Runner\QueueRunner::class))
+    ->setArguments([
+      new Reference('notification.rule_set_handler'),
+      new Reference('psr_log.logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+    ])
+);
 
+// Event subscriber
 $container->setDefinition(
   'notification.event_subscriber',
   (new Definition(\Civi\Notification\EventSubscriber\NotificationSubscriber::class))
-// ->setArguments([...])
+    ->addTag('kernel.event_subscriber')
 );
-
-$container->findDefinition('dispatcher')
-  ->addMethodCall('addSubscriber', [new Reference('notification.event_subscriber')]);
 
 $container->setDefinition(
   'notification.command.process_queue',
   (new Definition(\Civi\Notification\Command\ProcessQueueCommand::class))
-    ->setArguments([new Reference('notification.queue')])
+    ->setAutowired(true)
+    ->addTag('console.command', ['command' => 'notification:process-queue'])
     ->setPublic(true)
 );
