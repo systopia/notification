@@ -50,11 +50,13 @@ function notification_civicrm_enable(): void {
 }
 
 function notification_civicrm_pre(string $op, string $objectName, int|string|null $id, array &$params): void {
+  /** @var \Civi\Notification\Hook\HookHandler $handler */
   $handler = \Civi::container()->get('notification.hook_handler');
   $handler->onPre((string) $op, (string) $objectName, $id, $params);
 }
 
 function notification_civicrm_post(string $op, string $objectName, int|string|null $objectId, mixed &$objectRef): void {
+  /** @var \Civi\Notification\Hook\HookHandler $handler */
   $handler = \Civi::container()->get('notification.hook_handler');
   $handler->onPost((string) $op, (string) $objectName, $objectId, $objectRef);
 }
@@ -63,6 +65,7 @@ function notification_civicrm_postCommit(string $op,
   string $objectName,
   int|string|null $objectId,
   mixed &$objectRef): void {
+  /** @var \Civi\Notification\Hook\HookHandler $handler */
   $handler = \Civi::container()->get('notification.hook_handler');
   $handler->onPostCommit((string) $op, (string) $objectName, $objectId, $objectRef);
 }

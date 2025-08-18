@@ -66,9 +66,29 @@ class RuleSetEntity extends AbstractEntity {
       ->addWhere('is_active', '=', TRUE)
       ->addOrderBy('weight')
       ->execute();
+    /**
+     * @var iterable<array{
+     *   id: int,
+     *   preferred_location_type_id: int|null,
+     *   email_addresses: list<string>|null,
+     *   is_active: bool,
+     *   is_respect_communication_suspension: bool,
+     *   is_stop_after_this_rule: bool,
+     *   weight: int
+     * }> $notificationRules
+     */
 
     $rules = [];
     foreach ($notificationRules as $rule) {
+      /** @var array{
+       *   id: int,
+       *   preferred_location_type_id: int|null,
+       *   email_addresses: list<string>|null,
+       *   is_active: bool,
+       *   is_respect_communication_suspension: bool,
+       *   is_stop_after_this_rule: bool,
+       *   weight: int
+       * } $rule */
       $rules[] = new RuleEntity($rule);
     }
 

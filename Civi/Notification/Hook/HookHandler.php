@@ -57,6 +57,7 @@ class HookHandler {
         "SELECT * FROM {$table} WHERE id = %1",
         [1 => [$id, 'Integer']]
       );
+      // @phpstan-ignore-next-line
       if ($dao->fetch()) {
         return get_object_vars($dao);
       }
@@ -83,6 +84,7 @@ class HookHandler {
         "SELECT * FROM {$table} WHERE id = %1",
         [1 => [$id, 'Integer']]
       );
+      // @phpstan-ignore-next-line
       if ($dao->fetch()) {
         return get_object_vars($dao);
       }

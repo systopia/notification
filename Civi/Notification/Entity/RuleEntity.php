@@ -70,9 +70,11 @@ class RuleEntity extends AbstractEntity {
     $notificationConditions = NotificationCondition::get(FALSE)
       ->addWhere('rule_id', '=', $this->getId())
       ->execute();
+    /** @var iterable<array{id:int, field_name:string, operator:string, value:string}> $notificationConditions */
 
     $conditions = [];
     foreach ($notificationConditions as $condition) {
+      /** @var array{id:int, field_name:string, operator:string, value:string} $condition */
       $conditions[] = new ConditionEntity($condition);
     }
 
@@ -88,9 +90,18 @@ class RuleEntity extends AbstractEntity {
     $notificationFieldMonitorings = NotificationFieldMonitoring::get(FALSE)
       ->addWhere('rule_id', '=', $this->getId())
       ->execute();
+    /** @var iterable<array{
+     *   id:int,
+     *   field_name:string,
+     *   operator_before:string,
+     *   value_before:mixed,
+     *   operator_after:string,
+     *   value_after:mixed
+     * }> $notificationFieldMonitorings */
 
     $fieldMonitorings = [];
     foreach ($notificationFieldMonitorings as $fieldMonitoring) {
+      /** @var array{id:int, field_name:string, operator_before:string, value_before:mixed, operator_after:string, value_after:mixed} $fieldMonitoring */
       $fieldMonitorings[] = new FieldMonitoringEntity($fieldMonitoring);
     }
 
@@ -106,9 +117,20 @@ class RuleEntity extends AbstractEntity {
     $notificationContactSelections = NotificationContactSelection::get(FALSE)
       ->addWhere('rule_id', '=', $this->getId())
       ->execute();
+    /** @var iterable<array{
+     *   id:int,
+     *   contact_ids:array<int,int>,
+     *   group_ids:array<int,int>,
+     *   contact_type_ids:array<int,int>,
+     *   custom:array<string,mixed>|null
+     * }> $notificationContactSelections */
 
     $contactSelections = [];
     foreach ($notificationContactSelections as $contactSelection) {
+      /** @var array{
+       *   id:int, contact_ids:array<int,int>, group_ids:array<int,int>,
+       *   contact_type_ids:array<int,int>, custom:array<string,mixed>|null
+       * } $contactSelection */
       $contactSelections[] = new ContactSelectionEntity($contactSelection);
     }
 
@@ -124,9 +146,11 @@ class RuleEntity extends AbstractEntity {
     $notificationRuleMsgTemplates = NotificationRuleMessageTemplate::get(FALSE)
       ->addWhere('rule_id', '=', $this->getId())
       ->execute();
+    /** @var iterable<array{id:int, msg_template_id:int, languages:array<int,string>}> $notificationRuleMsgTemplates */
 
     $msgTemplates = [];
     foreach ($notificationRuleMsgTemplates as $msgTemplate) {
+      /** @var array{id:int, msg_template_id:int, languages:array<int,string>} $msgTemplate */
       $msgTemplates[] = new RuleMsgTemplateEntity($msgTemplate);
     }
 

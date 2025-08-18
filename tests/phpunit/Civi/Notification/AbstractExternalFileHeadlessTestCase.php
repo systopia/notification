@@ -28,7 +28,7 @@ abstract class AbstractNotificationHeadlessTestCase extends TestCase implements 
    */
   protected function setUserPermissions(?array $permissions): void {
     $userPermissions = \CRM_Core_Config::singleton()->userPermissionClass;
-    $userPermissions->permissions = $permissions;
+    $userPermissions->permissions = (array) $permissions;
   }
 
 }

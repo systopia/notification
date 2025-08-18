@@ -1,6 +1,8 @@
 {
     "require": {
-        "symfony/phpunit-bridge": "^7"
+        "symfony/phpunit-bridge": "^7",
+        "phpunit/phpunit": "^9.6",
+        "symfony/console": "^6.4 || ^7.0"
     },
     "scripts": {
         "post-install-cmd": [
