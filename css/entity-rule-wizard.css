@@ -1,0 +1,55 @@
+.notification-hidden { display: none; }
+
+.notification-rule-form .description { color: #666; margin-top: 4px; }
+.notification-rule-form em { color: #555; }
+
+.notif-fieldset { margin: 12px 0; padding: 10px 12px; }
+.notif-fieldset legend { font-weight: 600; }
+
+.notif-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.notif-col h4 { margin: 6px 0 8px; }
+
+.notif-fieldset .row { display: grid; grid-template-columns: 220px 1fr; gap: 10px; margin: 6px 0; }
+.notif-fieldset .row .col.label { align-self: center; }
+
+.notif-summary { padding: 8px 10px; background: #fafafa; border: 1px dashed #ccc; color: #333; }
+
+.notif-advanced { margin-top: 6px; }
+.notif-adv-toggle { font-size: 12px; }
+
+/* Chips de colores suaves para el resumen */
+.notif-chip {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 600;
+  line-height: 1.2;
+  border: 1px solid transparent;
+  margin: 0 2px;
+}
+.notif-chip.entity {
+  background: #e8f1ff;
+  border-color: #cfe0ff;
+  color: #1b4aba;
+}
+.notif-chip.field {
+  background: #f1e8ff;
+  border-color: #e2d6ff;
+  color: #5b31a6;
+}
+.notif-chip.value {
+  background: #e9f7ef;
+  border-color: #cfead8;
+  color: #2e7d32;
+}
+/* NUEVO: operador */
+.notif-chip.op {
+  background: #f2f4f7;
+  border-color: #e1e6ec;
+  color: #495057;
+}
+
+.notif-ids {
+  color: #666;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}

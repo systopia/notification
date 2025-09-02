@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace Civi\Notification\Hook;
 
 use Civi\Notification\Event\EventFactoryInterface;
+use Civi\Notification\Precheck\PreEnqueueMatcher;
 use Civi\Notification\Queue\Enqueuer;
 use Civi\Notification\Snapshot\SnapshotStore;
 use Civi\Notification\Util\EntityRef;
@@ -13,9 +14,9 @@ class HookHandler {
   public function __construct(
     private SnapshotStore $snapshots,
     private EventFactoryInterface $factory,
-    private Enqueuer $enqueuer
-  ) {
-  }
+    private Enqueuer $enqueuer,
+    private PreEnqueueMatcher $preMatcher
+  ) {}
 
   public function onPre(string $op, string $entity, int|string|null $id, array &$params): void {
     $table = EntityRef::table($entity);
@@ -27,7 +28,7 @@ class HookHandler {
   }
 
   public function onPost(string $op, string $entity, int|string|null $id, mixed &$objectRef): void {
-    // no-op for now
+    // no-op
   }
 
   public function onPostCommit(string $op, string $entity, int|string|null $id, mixed &$objectRef): void {
@@ -35,9 +36,16 @@ class HookHandler {
     if ($table === NULL) {
       return;
     }
+
     $before = $this->snapshots->get($entity, $op, $id ?? 0);
-    $after = $this->resolveAfter($op, $entity, $id, $objectRef, $before);
+    $after  = $this->resolveAfter($op, $entity, $id, $objectRef, $before);
+
     $context = [];
+
+    if (!$this->preMatcher->shouldEnqueueFromHook($op, $entity, $id, (array) $before, (array) $after, $context)) {
+      return;
+    }
+
     $event = $this->factory->fromHook($op, $entity, $id, $before, $after, $context);
     if ($event) {
       $this->enqueuer->enqueueEvent($event);
@@ -66,12 +74,15 @@ class HookHandler {
   }
 
   /**
-   * @param array<string, mixed> $before */
-  private function resolveAfter(string $op,
+   * @param array<string, mixed> $before
+   */
+  private function resolveAfter(
+    string $op,
     string $entity,
     int|string|null $id,
     mixed $objectRef,
-    array $before): array {
+    array $before
+  ): array {
     if (is_array($objectRef) && $objectRef) {
       return $objectRef;
     }

@@ -4,47 +4,60 @@ declare(strict_types = 1);
 namespace Civi\Notification\Data;
 
 /**
- * @phpstan-type changeSetT array<string, array{mixed, mixed}>
- *   Mapping of field name to array containing old (index 0) and new value (index 1).
+ * @phpstan-type changeSetT array<string, array{0:mixed,1:mixed}>
  */
 final class NotificationContext {
+  /**
+   * @var array<string,mixed> */
+  private array $oldValues;
 
   /**
-   * @phpstan-var changeSetT
-   */
-  public readonly array $changeSet;
+   * @var array<string,mixed> */
+  private array $newValues;
 
   /**
-   * @phpstan-var array<string, mixed>
-   */
-  public readonly array $oldValues;
+   * @var changeSetT */
+  private array $changeSet;
 
   /**
-   * @phpstan-var array<string, mixed>
-   */
-  public readonly array $newValues;
-
-  private array $extra = [];
-
-  /**
-   * @phpstan-param array<string, mixed> $oldValues
-   * @phpstan-param array<string, mixed> $newValues
-   * @phpstan-param changeSetT $changeSet
+   * @param array<string,mixed> $oldValues
+   * @param array<string,mixed> $newValues
+   * @param array $changeSet
    */
   public function __construct(array $oldValues, array $newValues, array $changeSet) {
-    $this->changeSet = $changeSet;
     $this->oldValues = $oldValues;
     $this->newValues = $newValues;
+    $this->changeSet = $changeSet;
   }
 
-  public function getExtra(string $key, mixed $default = NULL): mixed {
-    return $this->extra[$key] ?? $default;
+  /**
+   * @return array<string,mixed> */
+  public function getOldValues(): array {
+    return $this->oldValues;
   }
 
-  public function setExtra(string $key, mixed $value): static {
-    $this->extra[$key] = $value;
+  /**
+   * @return array<string,mixed> */
+  public function getNewValues(): array {
+    return $this->newValues;
+  }
 
-    return $this;
+  /**
+   * @return changeSetT */
+  public function getChangeSet(): array {
+    return $this->changeSet;
+  }
+
+  /**
+   * @return array<string,mixed> */
+  public function getBeforeValues(): array {
+    return $this->oldValues;
+  }
+
+  /**
+   * @return array<string,mixed> */
+  public function getAfterValues(): array {
+    return $this->newValues;
   }
 
 }

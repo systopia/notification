@@ -20,17 +20,17 @@ final class NotificationSubscriber implements EventSubscriberInterface {
    * @phpstan-var array<string, array<int, array{
    *   oldValues: array<string, mixed>,
    *   newValues: array<string, mixed>,
-   *   changeSet: changeSetT
+   *   changeSet: array<string, array{0:mixed,1:mixed}>
    * }>>
    * The first keys are entity name and entity ID.
    */
   private array $entityCache = [];
 
   /**
-   * @var mixed */
+   * @var mixed|null */
   private $ruleSetHandler;
   /**
-   * @var mixed */
+   * @var mixed|null */
   private $entityManager;
 
   /**
@@ -57,14 +57,17 @@ final class NotificationSubscriber implements EventSubscriberInterface {
       }
     }
     catch (\Throwable $e) {
-
+      // no-op
     }
   }
 
   public static function getSubscribedEvents(): array {
+    if (!\Civi::settings()->get('notification_queue_job_enabled') ||
+      \Civi::settings()->get('notification_processing_mode') != 'event') {
+      return [];
+    }
     return [
-      // Minimum priority because previous listeners could change the data.
-      'hook_civicrm_pre' => ['onPre', PHP_INT_MIN],
+      'hook_civicrm_pre'        => 'onPre',
       'hook_civicrm_postCommit' => 'onPostCommit',
     ];
   }
@@ -73,11 +76,16 @@ final class NotificationSubscriber implements EventSubscriberInterface {
     if ($this->entityManager === NULL || $this->ruleSetHandler === NULL) {
       return;
     }
+
     if ('edit' === $event->action && $event->id !== NULL) {
+      $id = (int) $event->id;
+      if ($id <= 0) {
+        return;
+      }
+
       if ($this->entityManager->hasActiveRuleSets($event->entity)) {
-        // Capture old values before the change
-        // @todo Also load custom values. (At least those in $event->params.)
-        $oldValues = $this->loadEntityValues($event->entity, $event->id);
+
+        $oldValues = $this->loadEntityValues($event->entity, $id);
         $newValues = $event->params + $oldValues;
         unset($newValues['custom']);
 
@@ -85,10 +93,10 @@ final class NotificationSubscriber implements EventSubscriberInterface {
         if ([] !== $changed) {
           $changeSet = [];
           foreach (array_keys($changed) as $fieldName) {
-            $changeSet[$fieldName] = [$oldValues[$fieldName], $newValues[$fieldName]];
+            $changeSet[$fieldName] = [$oldValues[$fieldName] ?? NULL, $newValues[$fieldName] ?? NULL];
           }
 
-          $this->entityCache[$event->entity][$event->id] = [
+          $this->entityCache[$event->entity][$id] = [
             'oldValues' => $oldValues,
             'newValues' => $newValues,
             'changeSet' => $changeSet,
@@ -102,18 +110,26 @@ final class NotificationSubscriber implements EventSubscriberInterface {
     if ($this->entityManager === NULL || $this->ruleSetHandler === NULL) {
       return;
     }
-    // Check if old values exist for this entity in the cache.
-    if (isset($this->entityCache[$event->entity][$event->id])) {
+
+    $id = (int) $event->id;
+    if ($id <= 0) {
+      return;
+    }
+
+    if (isset($this->entityCache[$event->entity][$id])) {
       [$oldValues, $newValues, $changeSet] = [
-        $this->entityCache[$event->entity][$event->id]['oldValues'],
-        $this->entityCache[$event->entity][$event->id]['newValues'],
-        $this->entityCache[$event->entity][$event->id]['changeSet'],
+        $this->entityCache[$event->entity][$id]['oldValues'],
+        $this->entityCache[$event->entity][$id]['newValues'],
+        $this->entityCache[$event->entity][$id]['changeSet'],
       ];
-      unset($this->entityCache[$event->entity][$event->id]);
+      unset($this->entityCache[$event->entity][$id]);
 
       $ruleSets = $this->entityManager->loadRuleSetByEntityType($event->entity);
       foreach ($ruleSets as $ruleSet) {
-        $this->ruleSetHandler->evaluateRuleSet($ruleSet, new NotificationContext($oldValues, $newValues, $changeSet));
+        $this->ruleSetHandler->evaluateRuleSet(
+          $ruleSet,
+          new NotificationContext($oldValues, $newValues, $changeSet)
+        );
       }
     }
   }
@@ -122,7 +138,6 @@ final class NotificationSubscriber implements EventSubscriberInterface {
    * Load entity values from the database.
    *
    * @return array<string, mixed>
-   *
    * @throws \CRM_Core_Exception
    */
   private function loadEntityValues(string $entityType, int $entityId): array {
@@ -130,9 +145,13 @@ final class NotificationSubscriber implements EventSubscriberInterface {
     $apiRequest = Request::create($entityType, 'get', [
       'version' => 4,
       'where' => [['id', '=', $entityId]],
+      'select' => ['*'],
+      'limit'  => 1,
     ]);
-    $result = $apiRequest->execute();
 
+    $apiRequest->setCheckPermissions(FALSE);
+
+    $result = $apiRequest->execute();
     return $result->single();
   }
 

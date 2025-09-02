@@ -1,0 +1,28 @@
+.notification-entity-actions {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.notification-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+
+.notification-actions .button {
+  margin-right: .25rem;
+}
+
+.ruleset-rules.is-hidden {
+  display: none;
+}
+
+table.display.inner thead th {
+  font-weight: 600;
+}

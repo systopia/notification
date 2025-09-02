@@ -15,7 +15,7 @@ namespace Civi\Notification\Data;
 class NotificationRecipient {
 
   /**
-   * @phpstan-var contactT
+   * @phpstan-var contactT|null
    */
   private ?array $contactData;
 
@@ -37,7 +37,7 @@ class NotificationRecipient {
   }
 
   public function getContactId(): ?int {
-    return $this->contactData['id'];
+    return $this->contactData['id'] ?? NULL;
   }
 
   public function getEmail(): string {

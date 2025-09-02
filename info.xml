@@ -20,6 +20,9 @@
   <releaseDate/>
   <version>0.0.1</version>
   <develStage>dev</develStage>
+  <templates>
+    <path>templates</path>
+  </templates>
   <compatibility>
     <ver>5.75</ver>
   </compatibility>

@@ -20,7 +20,12 @@ final class RuleMatchChecker implements RuleMatchCheckerInterface {
       }
     }
 
-    foreach ($rule->getFieldMonitorings() as $fieldMonitoring) {
+    $fieldMonitorings = $rule->getFieldMonitorings();
+    if ($fieldMonitorings === []) {
+      return TRUE;
+    }
+
+    foreach ($fieldMonitorings as $fieldMonitoring) {
       if (!$this->fieldMonitorHandler->evaluate($fieldMonitoring, $context)) {
         return FALSE;
       }

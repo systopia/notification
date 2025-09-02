@@ -1,32 +1,49 @@
 <?php
-
 declare(strict_types = 1);
 
 namespace Civi\Notification\Handler;
 
 use Civi\Notification\Data\NotificationContext;
 use Civi\Notification\Entity\FieldMonitoringEntity;
-use Civi\Notification\ValueComparator;
+use Civi\Notification\Support\DbLogger;
+use Civi\Notification\Util\ValueComparator;
 
-class FieldMonitoringHandler implements FieldMonitoringHandlerInterface {
+final class FieldMonitoringHandler implements FieldMonitoringHandlerInterface {
 
-  private ValueComparator $valueComparator;
+  public function __construct(
+    private ValueComparator $valueComparator
+  ) {}
 
-  public function __construct(ValueComparator $valueComparator) {
-    $this->valueComparator = $valueComparator;
-  }
+  public function evaluate(FieldMonitoringEntity $monitoring, NotificationContext $context): bool {
+    $field = $monitoring->getFieldName();
 
-  public function evaluate(FieldMonitoringEntity $fieldMonitoring, NotificationContext $context): bool {
-    $operatorBefore = $fieldMonitoring->getOperatorBefore();
-    $operatorAfter = $fieldMonitoring->getOperatorAfter();
-    $conditionBeforeValue = $fieldMonitoring->getValueBefore();
-    $conditionAfterValue = $fieldMonitoring->getValueAfter();
-    $fieldName = $fieldMonitoring->getFieldName();
-    $newValue = $context->newValues[$fieldName] ?? NULL;
-    $oldValue = $context->oldValues[$fieldName] ?? NULL;
+    $beforeOp = (string) $monitoring->getOperatorBefore();
+    $beforeExp = $monitoring->getValueBefore();
 
-    return $this->valueComparator->compareValues($oldValue, $operatorBefore, $conditionBeforeValue)
-      && $this->valueComparator->compareValues($newValue, $operatorAfter, $conditionAfterValue);
+    $afterOp = (string) $monitoring->getOperatorAfter();
+    $afterExp = $monitoring->getValueAfter();
+
+    $old = $context->getOldValues()[$field] ?? NULL;
+    $new = $context->getNewValues()[$field] ?? NULL;
+
+    DbLogger::log('debug', 'fieldmonitoring.compare', 'Comparing field monitoring', [
+      'field' => $field,
+      'before_op' => $beforeOp,
+      'before_exp' => $beforeExp,
+      'before_act' => $old,
+      'after_op' => $afterOp,
+      'after_exp' => $afterExp,
+      'after_act' => $new,
+    ]);
+
+    return $this->valueComparator->compareValues(
+      $beforeOp,
+      $beforeExp,
+      $old,
+      $afterOp,
+      $afterExp,
+      $new
+    );
   }
 
 }
