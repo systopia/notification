@@ -15,72 +15,98 @@
   </div>
 
   <div class="crm-block crm-content-block">
-    <h3>{ts}Existing RuleSets{/ts}</h3>
+    <br>
+    {if $ruleSetsByEntity|@count}
+      {foreach from=$ruleSetsByEntity key=entity item=list}
+        <div class="crm-accordion-wrapper notification-entity-group" id="entity-{$entity|escape}">
+          <div class="crm-accordion-header">
+            <h4 class="notification-entity-title">
+              {$entity}
+              <span class="notification-chip">{ts}RuleSets:{/ts} </span>
+            </h4>
+          </div>
 
-    <table class="display" style="width:100%">
-      <thead>
-      <tr>
-        <th>{ts}ID{/ts}</th>
-        <th>{ts}Entity{/ts}</th>
-        <th>{ts}Title{/ts}</th>
-        <th>{ts}Rules{/ts}</th>
-        <th>{ts}Only first?{/ts}</th>
-        <th>{ts}Active{/ts}</th>
-        <th>{ts}Actions{/ts}</th>
-      </tr>
-      </thead>
-      <tbody>
-      {foreach from=$ruleSets item=rs}
-        {assign var=rid value=$rs.id}
-        <tr>
-          <td>{$rs.id}</td>
-          <td>{$rs.monitored_entity_type}</td>
-          <td>{$rs.title}</td>
-          <td>{if isset($ruleCounts[$rid])}{$ruleCounts[$rid]}{else}0{/if}</td>
-          <td>{if $rs.is_execute_only_first_rule}{ts}Yes{/ts}{else}{ts}No{/ts}{/if}</td>
-          <td>{if $rs.is_active}{ts}Yes{/ts}{else}{ts}No{/ts}{/if}</td>
-          <td class="notification-actions">
-            <a class="button" href="{crmURL p='civicrm/notification/entity-rule' q="reset=1&entity_type=`$rs.monitored_entity_type`&ruleset_id=`$rs.id`"}">{ts}Add rule{/ts}</a>
-            <a class="button button-secondary js-toggle-rules" data-ruleset="{$rs.id}" href="#">{ts}Show rules{/ts}</a>
-          </td>
-        </tr>
+          <div class="crm-accordion-body">
+            <div class="notification-ruleset-grid">
+              {foreach from=$list item=rs}
+                {assign var=rid value=$rs.id}
+                {assign var=rc value=$ruleCounts[$rid]|default:0}
 
-        <tr id="ruleset-rules-{$rs.id}" class="ruleset-rules is-hidden">
-          <td colspan="7">
-            <table class="display inner" style="width:100%">
-              <thead>
-              <tr>
-                <th>{ts}ID{/ts}</th>
-                <th>{ts}Title{/ts}</th>
-                <th>{ts}Active{/ts}</th>
-                <th>{ts}Actions{/ts}</th>
-              </tr>
-              </thead>
-              <tbody>
-              {assign var=rules value=$rulesBySet[$rid]|default:[]}
-              {if $rules|@count}
-                {foreach from=$rules item=rule}
-                  <tr>
-                    <td>{$rule.id}</td>
-                    <td>{if $rule.title}{$rule.title}{else}{ts}Rule #{/ts}{$rule.id}{/if}</td>
-                    <td>{if $rule.is_active}{ts}Yes{/ts}{else}{ts}No{/ts}{/if}</td>
-                    <td>
-                      <a class="button" href="{crmURL p='civicrm/notification/entity-rule' q="reset=1&entity_type=`$rs.monitored_entity_type`&ruleset_id=`$rs.id`&rule_id=`$rule.id`"}">{ts}Edit{/ts}</a>
-                    </td>
-                  </tr>
-                {/foreach}
-              {else}
-                <tr>
-                  <td colspan="4">{ts}No rules in this set yet.{/ts}</td>
-                </tr>
-              {/if}
-              </tbody>
-            </table>
-          </td>
-        </tr>
+                <div class="notification-ruleset-card" data-ruleset="{$rid}">
+                  <div class="notification-ruleset-head">
+                    <div class="notification-ruleset-title">{$rs.title|escape}</div>
+                    <div class="notification-ruleset-meta">
+                      <span class="notification-badge">{$rc} {ts}rules{/ts}</span>
+                      <span class="notification-badge {if $rs.is_active}is-on{else}is-off{/if}">
+                        {if $rs.is_active}{ts}Active{/ts}{else}{ts}Inactive{/ts}{/if}
+                      </span>
+                      {if $rs.is_execute_only_first_rule}
+                        <span class="notification-badge is-warn" title="{ts}Only first matching rule will run{/ts}">{ts}Only first{/ts}</span>
+                      {else}
+                        <span class="notification-badge is-muted" title="{ts}All matching rules will run{/ts}">{ts}All rules{/ts}</span>
+                      {/if}
+                    </div>
+                  </div>
+
+                  <div class="notification-ruleset-actions">
+                    <a class="button" href="{crmURL p='civicrm/notification/entity-rule' q="reset=1&entity_type=`$rs.monitored_entity_type`&ruleset_id=`$rs.id`"}">{ts}Add rule{/ts}</a>
+                    <button
+                      class="button button-secondary js-toggle-rules"
+                      data-target="#ruleset-rules-{$rid}"
+                      data-count="{$rc}"
+                      aria-controls="ruleset-rules-{$rid}"
+                      aria-expanded="false">
+                      {ts 1=$rc}Show %1 rules{/ts}
+                    </button>
+                  </div>
+
+                  <div id="ruleset-rules-{$rid}" class="notification-ruleset-body is-hidden" aria-hidden="true">
+                    <table class="display inner" style="width:100%">
+                      <thead>
+                      <tr>
+                        <th>{ts}ID{/ts}</th>
+                        <th>{ts}Title{/ts}</th>
+                        <th>{ts}Active{/ts}</th>
+                        <th>{ts}Actions{/ts}</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      {assign var=rules value=$rulesBySet[$rid]|default:[]}
+                      {if $rules|@count}
+                        {foreach from=$rules item=rule}
+                          <tr>
+                            <td>{$rule.id}</td>
+                            <td>{if $rule.title}{$rule.title|escape}{else}{ts}Rule #{/ts}{$rule.id}{/if}</td>
+                            <td>
+                              {if $rule.is_active}
+                                <span class="notification-dot is-on"></span> {ts}Yes{/ts}
+                              {else}
+                                <span class="notification-dot is-off"></span> {ts}No{/ts}
+                              {/if}
+                            </td>
+                            <td>
+                              <a class="button" href="{crmURL p='civicrm/notification/entity-rule' q="reset=1&entity_type=`$rs.monitored_entity_type`&ruleset_id=`$rs.id`&rule_id=`$rule.id`"}">{ts}Edit{/ts}</a>
+                            </td>
+                          </tr>
+                        {/foreach}
+                      {else}
+                        <tr>
+                          <td colspan="4">{ts}No rules in this set yet.{/ts}</td>
+                        </tr>
+                      {/if}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              {/foreach}
+            </div>
+          </div>
+        </div>
       {/foreach}
-      </tbody>
-    </table>
+    {else}
+      <p>{ts}No RuleSets found.{/ts}</p>
+    {/if}
   </div>
 
 {/crmScope}

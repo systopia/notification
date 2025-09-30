@@ -6,7 +6,6 @@
     function toggleButton() {
       $btn.prop('disabled', !$select.val());
     }
-
     $select.on('change', toggleButton);
     toggleButton();
 
@@ -18,10 +17,37 @@
       window.location.href = url;
     });
 
-    $('.js-toggle-rules').on('click', function (e) {
+    $(document).on('click', '.js-toggle-rules', function (e) {
       e.preventDefault();
-      var id = $(this).data('ruleset');
-      $('#ruleset-rules-' + id).toggleClass('is-hidden');
+      var $btn = $(this);
+      var target = $btn.attr('data-target');
+      var $panel = $(target);
+      if (!$panel.length) return;
+
+      var wasHidden = $panel.hasClass('is-hidden');
+      $panel.stop(true, true);
+
+      if (wasHidden) {
+          $panel.removeClass('is-hidden').hide().slideDown(140, function () {
+          $panel.attr('aria-hidden', 'false');
+        });
+        $btn.attr('aria-expanded', 'true')
+          .text(CRM.ts('notification')('Hide rules'));
+      } else {
+         $panel.slideUp(140, function () {
+          $panel.addClass('is-hidden').attr('aria-hidden', 'true');
+        });
+        var count = $btn.data('count') || '';
+        $btn.attr('aria-expanded', 'false')
+          .text(count ? CRM.ts('notification')('Show %1 rules').replace('%1', count)
+            : CRM.ts('notification')('Show rules'));
+      }
+    });
+
+    $('.crm-accordion-wrapper .crm-accordion-header').on('click', function (e) {
+      if ($(e.target).closest('button,a').length) return;
+      $(this).next('.crm-accordion-body').slideToggle(140);
+      $(this).parent().toggleClass('is-open');
     });
   });
 })(CRM.$, CRM);

@@ -48,9 +48,7 @@
       <legend>{ts}When does this rule trigger?{/ts}</legend>
 
       <div class="row">
-        <div class="col label">
-          {$form.field_name.label}
-        </div>
+        <div class="col label">{$form.field_name.label}</div>
         <div class="col content">
           {$form.field_name.html} <em>⭐ {ts}star indicates field has option values{/ts}</em>
         </div>
@@ -70,12 +68,8 @@
           </div>
 
           <div class="row">
-            <div class="col label">
-              <div class="col label">{ts}Enter values manually{/ts}</div>
-            </div>
-            <div class="col content">
-              <div id="adv-before" class="notif-advanced">{$form.value_before.html}</div>
-            </div>
+            <div class="col label"><div class="col label">{ts}Enter values manually{/ts}</div></div>
+            <div class="col content"><div id="adv-before" class="notif-advanced">{$form.value_before.html}</div></div>
           </div>
         </div>
 
@@ -92,12 +86,8 @@
           </div>
 
           <div class="row">
-            <div class="col label">
-              <div class="col label">{ts}Enter values manually{/ts}</div>
-            </div>
-            <div class="col content">
-              <div id="adv-after" class="notif-advanced">{$form.value_after.html}</div>
-            </div>
+            <div class="col label"><div class="col label">{ts}Enter values manually{/ts}</div></div>
+            <div class="col content"><div id="adv-after" class="notif-advanced">{$form.value_after.html}</div></div>
           </div>
         </div>
       </div>
@@ -120,6 +110,30 @@
     <fieldset class="notif-fieldset">
       <legend>{ts}Summary{/ts}</legend>
       <div id="notif-summary" class="notif-summary"></div>
+    </fieldset>
+
+
+    <fieldset class="notif-fieldset">
+      <legend>{ts}Rule maintenance{/ts}</legend>
+      <table class="form-layout">
+        <tr>
+          <td class="label">{$form.is_active.label}</td>
+          <td class="content">
+            {$form.is_active.html}
+            <div class="description">{ts}Toggle to enable/disable this rule.{/ts}</div>
+          </td>
+          {if $form.rule_id.value}
+            <td class="label">&nbsp;</td>
+            <td class="content">
+              {crmButton type="next" subName="delete" class="crm-button crm-button-type-delete" id="notif-delete-rule" icon="trash" title="{ts}Delete rule permanently{/ts}"}
+              {ts}Delete rule{/ts}
+              {/crmButton}
+              <div class="description">{ts}Deletes this rule permanently.{/ts}</div>
+
+            </td>
+          {/if}
+        </tr>
+      </table>
     </fieldset>
 
     <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>

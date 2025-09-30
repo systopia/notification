@@ -4,7 +4,7 @@ declare(strict_types = 1);
 class CRM_Notification_Page_EntityConfig extends CRM_Core_Page {
 
   public function run() {
-    $entities = ['Activity', 'Contribution', 'Membership', 'Participant', 'Case'];
+    $entities = ['Activity', 'Contribution', 'Membership', 'Contact', 'Case'];
     $this->assign('entities', $entities);
 
     $ruleSets = [];
@@ -48,6 +48,12 @@ class CRM_Notification_Page_EntityConfig extends CRM_Core_Page {
       $counts[$sid] = count($list);
     }
     $this->assign('ruleCounts', $counts);
+
+    $byEntity = [];
+    foreach ($ruleSets as $rs) {
+      $byEntity[$rs['monitored_entity_type']][] = $rs;
+    }
+    $this->assign('ruleSetsByEntity', $byEntity);
 
     $res = CRM_Core_Resources::singleton();
     $res->addStyleFile('notification', 'css/entity-config.css', CRM_Core_Resources::DEFAULT_WEIGHT, 'html-header');

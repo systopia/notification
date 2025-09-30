@@ -5,7 +5,6 @@
   const STAR = ' ★';
 
   let currentEntity = '';
-  let initialLoad = true;
 
   const fieldOptionsByEntity = {};
   const hasOptionsByEntity = {};
@@ -134,11 +133,7 @@
 
   function loadFieldOptions(fieldName, preserveExisting) {
     if (!fieldName || !currentEntity) {
-      showValueRows(false);
-      clearValuesSelects();
-      showRawRows(true);
-      setRawInputsFor('', !preserveExisting);
-      return;
+      showValueRows(false); clearValuesSelects(); showRawRows(true); setRawInputsFor('', !preserveExisting); return;
     }
     const byField = fieldOptionsByEntity[currentEntity] || {};
     const cached = byField[fieldName] || [];
@@ -146,9 +141,7 @@
 
     if (cached.length) {
       if (!preserveExisting) $('#value_before,#value_after').val('');
-      showRawRows(false);
-      showValueRows(true);
-      fillValuesSelects(cached);
+      showRawRows(false); showValueRows(true); fillValuesSelects(cached);
       return;
     }
 
@@ -174,22 +167,15 @@
           fieldOptionsByEntity[currentEntity][fieldName] = opts;
           markStar($field, fieldName);
           if (!preserveExisting) $('#value_before,#value_after').val('');
-          showRawRows(false);
-          showValueRows(true);
-          fillValuesSelects(opts);
+          showRawRows(false); showValueRows(true); fillValuesSelects(opts);
         } else {
           markStar($field, fieldName);
           clearValuesSelects();
           $('#value_before_opts,#value_after_opts').val(null).trigger('change');
-          showValueRows(false);
-          showRawRows(true);
-          setRawInputsFor(fieldName, !preserveExisting);
+          showValueRows(false); showRawRows(true); setRawInputsFor(fieldName, !preserveExisting);
         }
       }, function () {
-        clearValuesSelects();
-        showValueRows(false);
-        showRawRows(true);
-        setRawInputsFor(fieldName, !preserveExisting);
+        clearValuesSelects(); showValueRows(false); showRawRows(true); setRawInputsFor(fieldName, !preserveExisting);
       });
   }
 
@@ -199,10 +185,7 @@
     try { if ($sel.data('select2')) $sel.select2('destroy'); } catch (e) {}
     $sel.empty().append($('<option>').attr('value', '').text(ts('- select Message Template -')));
     CRM.api3('MessageTemplate', 'get', {
-      sequential: 1,
-      return: ['id', 'msg_title'],
-      is_active: 1,
-      options: { sort: 'msg_title', limit: 0 }
+      sequential: 1, return: ['id', 'msg_title'], is_active: 1, options: { sort: 'msg_title', limit: 0 }
     }).done(function (res) {
       (res.values || []).forEach(function (row) {
         if (row.msg_title && String(row.msg_title).trim() !== '') {
@@ -211,9 +194,7 @@
       });
       ensureSelect2($sel, false);
       if (def) { $sel.val(def).trigger('change'); }
-    }).fail(function () {
-      ensureSelect2($sel, false);
-    });
+    }).fail(function () { ensureSelect2($sel, false); });
   }
 
   function esc(s) { return String(s || '').replace(/[&<>"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]); }); }
@@ -231,8 +212,7 @@
     const fieldLabel = $('#field_name option:selected').text() || 'field';
     const preOp  = String($('#operator_before').val() || '');
     const postOp = String($('#operator_after').val()  || '');
-    const $vb = $('#value_before_opts');
-    const $va = $('#value_after_opts');
+    const $vb = $('#value_before_opts'), $va = $('#value_after_opts');
     let beforeIds = ($vb.val() || []).map(String);
     let afterIds  = ($va.val()  || []).map(String);
     const beforeLabels = $vb.find('option:selected').map(function(){ return $(this).text(); }).get();
@@ -240,73 +220,16 @@
     if (!beforeIds.length) beforeIds = parseIdsFromRaw($('#value_before').val());
     if (!afterIds.length)  afterIds  = parseIdsFromRaw($('#value_after').val());
     if ((beforeIds.length || afterIds.length)) {
-      const html = ts('Rule matches when') + ' ' +
-        chip('entity', entity) + ' ' +
-        ts('changes the field') + ' ' +
-        chip('field', fieldLabel) + ' ' +
-        ts('from') + ' ' +
-        chip('op', prettyOp(preOp)) + ' ' +
-        '"' + esc(beforeLabels.join(', ') || '—') + '"' +
+      const html = ts('Rule matches when') + ' ' + chip('entity', entity) + ' ' +
+        ts('changes the field') + ' ' + chip('field', fieldLabel) + ' ' +
+        ts('from') + ' ' + chip('op', prettyOp(preOp)) + ' "' + esc(beforeLabels.join(', ') || '—') + '"' +
         ' <span class="notif-ids">[' + esc(beforeIds.join(', ')) + ']</span> ' +
-        ts('to') + ' ' +
-        chip('op', prettyOp(postOp)) + ' ' +
-        '"' + esc(afterLabels.join(', ') || '—') + '"' +
+        ts('to') + ' ' + chip('op', prettyOp(postOp)) + ' "' + esc(afterLabels.join(', ') || '—') + '"' +
         ' <span class="notif-ids">[' + esc(afterIds.join(', ')) + ']</span>.';
       $sum.html(html);
     } else {
       $sum.text('');
     }
-  }
-
-  function populateFieldsFromApi4($field) {
-    return CRM.api4(currentEntity, 'getFields', {
-      action: 'get',
-      checkPermissions: false,
-      select: ['name', 'label', 'options', 'readonly', 'is_virtual', 'data_type'],
-      loadOptions: true
-    }).then(function(rows) {
-      const usable = rows.filter(function(f){ return !f.readonly && !f.is_virtual; });
-      const byField = {};
-      const hasBy = {};
-      const metaBy = {};
-      usable.forEach(function(f) {
-        const opts = normalizeOptions(f.options);
-        if (opts.length) { byField[f.name] = opts; hasBy[f.name] = true; }
-        metaBy[f.name] = { data_type: f.data_type || '' };
-        const label = (f.label || f.name) + (opts.length ? STAR : '');
-        $('<option>').attr('value', f.name).text(label).appendTo($field);
-      });
-      fieldOptionsByEntity[currentEntity] = byField;
-      hasOptionsByEntity[currentEntity] = hasBy;
-      fieldMetaByEntity[currentEntity] = metaBy;
-      return usable.length;
-    });
-  }
-
-  function populateFieldsFromApi3($field) {
-    return CRM.api3(currentEntity, 'getfields', {
-      api_action: 'get',
-      sequential: 1,
-      options: { limit: 0 }
-    }).then(function(res){
-      const values = res.values || {};
-      const names = Object.keys(values);
-      const byField = {};
-      const hasBy = {};
-      const metaBy = {};
-      names.forEach(function(name){
-        const f = values[name] || {};
-        const opts = normalizeOptions(f.options || {});
-        if (opts.length) { byField[name] = opts; hasBy[name] = true; }
-        metaBy[name] = { data_type: (f.type || f.data_type || '') };
-        const label = (f.title || name) + (opts.length ? STAR : '');
-        $('<option>').attr('value', name).text(label).appendTo($field);
-      });
-      fieldOptionsByEntity[currentEntity] = byField;
-      hasOptionsByEntity[currentEntity] = hasBy;
-      fieldMetaByEntity[currentEntity] = metaBy;
-      return names.length;
-    });
   }
 
   function populateFields() {
@@ -319,35 +242,48 @@
 
     if (!currentEntity) { ensureSelect2($field, false); showValueRows(false); showRawRows(false); return; }
 
-    populateFieldsFromApi4($field)
-      .catch(function(){ return 0; })
-      .then(function(count){
-        if (!count) return populateFieldsFromApi3($field);
-        return count;
-      })
-      .then(function(count){
-        ensureSelect2($field, false);
-        if (!count) { $field.find('option:first').text(ts('None found')); }
-        showValueRows(false);
-        showRawRows(false);
-
-        if (savedField && $field.find('option[value="' + savedField + '"]').length) {
-          $field.val(savedField);
-          loadFieldOptions(savedField, true);
-        } else {
-          const initial = $field.val();
-          if (initial) loadFieldOptions(initial, true);
-        }
-
-        initialLoad = false;
-      })
-      .catch(function(){
-        ensureSelect2($field, false);
-        $field.find('option:first').text(ts('None found'));
-        showValueRows(false);
-        showRawRows(false);
-        initialLoad = false;
+    CRM.api4(currentEntity, 'getFields', {
+      action: 'get', checkPermissions: false,
+      select: ['name', 'label', 'options', 'readonly', 'is_virtual', 'data_type'], loadOptions: true
+    }).then(function(rows) {
+      const usable = rows.filter(function(f){ return !f.readonly && !f.is_virtual; });
+      const byField = {}, hasBy = {}, metaBy = {};
+      usable.forEach(function(f){
+        const opts = (function(o){ if (!o) return []; if ($.isArray(o)) return o.map(x => ({id:String(x.key ?? x.id ?? x.value), text:String(x.label ?? x.name ?? x.value ?? '')})).filter(x=>x.id&&x.text); return $.map(o, (label,id)=>({id:String(id),text:String(label)})); })(f.options);
+        if (opts.length) byField[f.name] = opts, hasBy[f.name] = true;
+        metaBy[f.name] = { data_type: f.data_type || '' };
+        $('<option>').attr('value', f.name).text((f.label||f.name) + (opts.length?STAR:'')).appendTo($field);
       });
+      fieldOptionsByEntity[currentEntity] = byField;
+      hasOptionsByEntity[currentEntity] = hasBy;
+      fieldMetaByEntity[currentEntity] = metaBy;
+
+      ensureSelect2($field, false);
+      if (savedField && $field.find('option[value="'+savedField+'"]').length) {
+        $field.val(savedField); loadFieldOptions(savedField, true);
+      }
+    }).catch(function(){
+      CRM.api3(currentEntity, 'getfields', { api_action: 'get', sequential: 1, options: { limit: 0 } })
+        .then(function(res){
+          const values = res.values || {};
+          const byField = {}, hasBy = {}, metaBy = {};
+          Object.keys(values).forEach(function(name){
+            const f = values[name] || {};
+            const opts = (function(o){ if (!o) return []; return $.map(o, (label,id)=>({id:String(id),text:String(label)})); })(f.options || {});
+            if (opts.length) byField[name] = opts, hasBy[name] = true;
+            metaBy[name] = { data_type: (f.type || f.data_type || '') };
+            $('<option>').attr('value', name).text((f.title||name) + (opts.length?STAR:'')).appendTo($field);
+          });
+          fieldOptionsByEntity[currentEntity] = byField;
+          hasOptionsByEntity[currentEntity] = hasBy;
+          fieldMetaByEntity[currentEntity] = metaBy;
+
+          ensureSelect2($field, false);
+          if (savedField && $field.find('option[value="'+savedField+'"]').length) {
+            $field.val(savedField); loadFieldOptions(savedField, true);
+          }
+        });
+    });
   }
 
   $(function () {
@@ -368,16 +304,6 @@
     ensureSelect2($('#value_before_opts'), true);
     ensureSelect2($('#value_after_opts'),  true);
 
-    $(document).on('click', '.notif-adv-toggle', function (e) {
-      e.preventDefault();
-      let tgt = $(this).data('target');
-      if (tgt) { $(tgt).slideToggle(120); return; }
-      const $row = $(this).closest('.crm-section').nextAll().filter(function(){
-        return $(this).find('#value_before,#value_after').length > 0;
-      }).first();
-      if ($row.length) $row.slideToggle(120);
-    });
-
     $(document).on('change', '#field_name', function () {
       const v = $(this).val();
       loadFieldOptions(v, false);
@@ -388,5 +314,16 @@
 
     populateFields();
     populateMessageTemplates();
+
+    $(document).on('click', 'input[name="_qf_EntityRuleWizard_next_delete"], #notif-delete-rule', function (e) {
+      var msg = (CRM.ts && CRM.ts('notification'))
+        ? CRM.ts('notification')('Are you sure you want to delete this rule? This cannot be undone.')
+        : 'Are you sure you want to delete this rule? This cannot be undone.';
+      if (!window.confirm(msg)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return false;
+      }
+    });
   });
 })(CRM.$, CRM);

@@ -6,8 +6,7 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
   private const NEW_RULESET_VALUE = 'new';
 
   protected string $entityType = 'Activity';
-  /**
-   * @var array<string,mixed> */
+  /** @var array<string,mixed> */
   protected array $editDefaults = [];
 
   public function preProcess(): void {
@@ -50,11 +49,17 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     $rulesetChoices = ['' => ts('- none -')]
       + $this->getRuleSetOptions($this->entityType)
       + [self::NEW_RULESET_VALUE => ts('— New Rule Set…')];
+
     $this->add('select', 'ruleset_id', ts('RuleSet'),
       $rulesetChoices, FALSE, ['class' => 'crm-select2', 'id' => 'ruleset_id']);
+
     $this->add('text', 'ruleset_title', ts('RuleSet Title'));
     $this->add('text', 'rule_title', ts('Rule Title'), [], TRUE);
 
+
+    $this->add('advcheckbox', 'is_active', ts('Active'));
+
+    // Recipients
     $this->addEntityRef('contact_ids_er', ts('Contacts'), [
       'entity' => 'Contact',
       'api' => ['check_permissions' => 1],
@@ -79,53 +84,59 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       $fieldOpts, TRUE, ['class' => 'crm-select2', 'id' => 'field_name']);
 
     $ops = ['in' => 'in', 'not_in' => 'not_in', 'eq' => 'eq', 'neq' => 'neq'];
-    $this->add('select', 'operator_before',
-      ts('Operator Before'), $ops, TRUE, ['class' => 'crm-select2', 'id' => 'operator_before']);
+    $this->add('select', 'operator_before', ts('Operator Before'), $ops, TRUE, ['class' => 'crm-select2', 'id' => 'operator_before']);
     $this->add('text', 'value_before', ts('or raw (Before)'), ['id' => 'value_before']);
 
-    $this->add('select', 'operator_after',
-      ts('Operator After'), $ops, TRUE, ['class' => 'crm-select2', 'id' => 'operator_after']);
+    $this->add('select', 'operator_after', ts('Operator After'), $ops, TRUE, ['class' => 'crm-select2', 'id' => 'operator_after']);
     $this->add('text', 'value_after', ts('or raw (After)'), ['id' => 'value_after']);
 
     $prefillBefore = $this->decodeJsonArray((string) ($defaults['value_before'] ?? '[]'));
     $prefillAfter  = $this->decodeJsonArray((string) ($defaults['value_after'] ?? '[]'));
     $this->add('select', 'value_before_opts', ts('Value Before (by label)'), [], FALSE,
-      [
-        'class' => 'crm-select2',
-        'multiple' => TRUE,
-        'id'
-        => 'value_before_opts',
-        'data-prefill' => json_encode($prefillBefore),
-      ]);
+      ['class' => 'crm-select2', 'multiple' => TRUE, 'id' => 'value_before_opts', 'data-prefill' => json_encode($prefillBefore)]);
     $this->add('select', 'value_after_opts', ts('Value After (by label)'), [], FALSE,
-      [
-        'class' => 'crm-select2',
-        'multiple' => TRUE,
-        'id'
-        => 'value_after_opts',
-        'data-prefill' => json_encode($prefillAfter),
-      ]);
+      ['class' => 'crm-select2', 'multiple' => TRUE, 'id' => 'value_after_opts', 'data-prefill' => json_encode($prefillAfter)]);
 
+    // Message
     $mtDefault = isset($defaults['message_template_id']) ? (string) $defaults['message_template_id'] : '';
     $this->add('select', 'message_template_id', ts('Message Template'),
       ['' => ts('- select Message Template -')], TRUE,
       ['class' => 'crm-select2', 'id' => 'message_template_id', 'data-default' => $mtDefault]
     );
 
+    // Defaults
+    $defaults += [
+      'is_active' => isset($defaults['is_active']) ? (int) !empty($defaults['is_active']) : 1,
+      'rule_id'   => ($this->editDefaults['rule_id'] ?? 0),
+    ];
     $this->setDefaults($defaults);
 
-    $this->addButtons([
-      ['type' => 'next', 'name' => ts('Create / Update'), 'isDefault' => TRUE],
+    $buttons = [
+      ['type' => 'next',   'name' => ts('Create / Update'), 'isDefault' => TRUE],
       ['type' => 'cancel', 'name' => ts('Cancel')],
-    ]);
-    $this->addFormRule([$this, 'formRule']);
+    ];
+    if (!empty($this->editDefaults['rule_id'])) {
+      $buttons[] = [
+        'type'    => 'next',
+        'name'    => ts('Delete rule'),
+        'subName' => 'delete',
+        'class'   => 'crm-button crm-button-type-delete', // estilo rojo core
+      ];
+    }
+    $this->addButtons($buttons);
 
+    $this->addFormRule([$this, 'formRule']);
     parent::buildQuickForm();
   }
 
   /**
-   * @return TRUE|array<string,string> */
+   * @return TRUE|array<string,string>
+   */
   public function formRule($values) {
+    if ($this->controller->getButtonName() === $this->getButtonName('next', 'delete')) {
+      return TRUE;
+    }
+
     $errors = [];
     $rsSel = (string) ($values['ruleset_id'] ?? '');
     $rsTitle = trim((string) ($values['ruleset_title'] ?? ''));
@@ -151,8 +162,20 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     // phpcs:enable
     $v = $this->exportValues();
 
+    $ruleId = (int) ($v['rule_id'] ?? 0);
+
+    if ($this->controller->getButtonName() === $this->getButtonName('next', 'delete') && $ruleId > 0) {
+      \Civi\Api4\NotificationContactSelection::delete()->addWhere('rule_id', '=', $ruleId)->execute();
+      \Civi\Api4\NotificationFieldMonitoring::delete()->addWhere('rule_id', '=', $ruleId)->execute();
+      \Civi\Api4\NotificationRuleMessageTemplate::delete()->addWhere('rule_id', '=', $ruleId)->execute();
+      \Civi\Api4\NotificationRule::delete()->addWhere('id', '=', $ruleId)->execute();
+
+      CRM_Core_Session::setStatus(ts('Rule deleted'), '', 'success');
+      CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/notification/entities', 'reset=1'));
+      return;
+    }
+
     $entity    = (string) $v['entity_type'];
-    $ruleId    = (int) ($v['rule_id'] ?? 0);
 
     $rsRaw     = (string) ($v['ruleset_id'] ?? '');
     $rulesetId = ctype_digit($rsRaw) ? (int) $rsRaw : 0;
@@ -189,8 +212,10 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       }
     }
 
+    $isActive = !empty($v['is_active']);
+
     $this->ensureQueue();
-    $ruId = $this->ensureRule($rulesetId, $ruTitle, $langs, $ruleId);
+    $ruId = $this->ensureRule($rulesetId, $ruTitle, $langs, $ruleId, $isActive);
 
     $this->resetContactSelection($ruId);
     $this->createContactSelection($ruId, $contacts, $groups, $ctypes);
@@ -205,17 +230,15 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
   }
 
   /**
-   * @return array<string,mixed> */
-  // phpcs:disable Generic.Metrics.CyclomaticComplexity.TooHigh
+   * @return array<string,mixed>
+   */
   protected function loadRuleDefaults(int $ruleId): array {
-    // phpcs:enable
     $out = ['rule_id' => $ruleId];
 
     try {
-
       $r = \Civi\Api4\NotificationRule::get()
         ->addWhere('id', '=', $ruleId)
-        ->addSelect('id', 'rule_set_id', 'title', 'languages')
+        ->addSelect('id', 'rule_set_id', 'title', 'languages', 'is_active')
         ->setLimit(1)->execute();
       if (!$r->count()) {
         return $out;
@@ -224,6 +247,7 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       $rule = (array) $r[0];
       $out['ruleset_id'] = (int) $rule['rule_set_id'];
       $out['rule_title'] = (string) $rule['title'];
+      $out['is_active']  = !empty($rule['is_active']);
 
       $langs = $rule['languages'] ?? [];
       if (is_string($langs)) {
@@ -280,7 +304,6 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       }
     }
     catch (\Throwable $e) {
-
     }
 
     return $out;
@@ -483,13 +506,14 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     );
   }
 
-  protected function ensureRule(int $ruleSetId, string $title, array $languages, int $ruleId = 0): int {
+  // NUEVO: $isActive
+  protected function ensureRule(int $ruleSetId, string $title, array $languages, int $ruleId = 0, bool $isActive = TRUE): int {
     if ($ruleId > 0) {
       \Civi\Api4\NotificationRule::update()
         ->addWhere('id', '=', $ruleId)
         ->addValue('rule_set_id', $ruleSetId)
         ->addValue('title', $title)
-        ->addValue('is_active', TRUE)
+        ->addValue('is_active', $isActive)
         ->addValue('on_create', FALSE)
         ->addValue('on_update', TRUE)
         ->addValue('on_delete', FALSE)
@@ -506,17 +530,18 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
         ->addWhere('id', '=', $existing[0]['id'])
         ->addValue('rule_set_id', $ruleSetId)
         ->addValue('title', $title)
-        ->addValue('is_active', TRUE)
+        ->addValue('is_active', $isActive)
         ->addValue('on_create', FALSE)
         ->addValue('on_update', TRUE)
         ->addValue('on_delete', FALSE)
         ->addValue('languages', $languages)->execute();
       return (int) $existing[0]['id'];
     }
+
     $create = \Civi\Api4\NotificationRule::create()
       ->addValue('rule_set_id', $ruleSetId)
       ->addValue('title', $title)
-      ->addValue('is_active', TRUE)
+      ->addValue('is_active', $isActive)
       ->addValue('on_create', FALSE)
       ->addValue('on_update', TRUE)
       ->addValue('on_delete', FALSE)
@@ -551,8 +576,7 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       ->addWhere('rule_id', '=', $ruleId)->execute();
   }
 
-  protected function createContactSelection(int $ruleId, array $contactIds, array $groupIds, array $contactTypes)
-  : void {
+  protected function createContactSelection(int $ruleId, array $contactIds, array $groupIds, array $contactTypes): void {
     \Civi\Api4\NotificationContactSelection::create()
       ->addValue('rule_id', $ruleId)
       ->addValue('contact_ids', $contactIds)
@@ -591,18 +615,14 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     }
   }
 
-  /**
-   */
   protected function replaceRuleMessageTemplate(int $ruleId, int $mtId, array $languages): void {
     \Civi\Api4\NotificationRuleMessageTemplate::delete()
-      ->addWhere('rule_id', '=', $ruleId)
-      ->execute();
+      ->addWhere('rule_id', '=', $ruleId)->execute();
 
     \Civi\Api4\NotificationRuleMessageTemplate::create()
       ->addValue('rule_id', $ruleId)
       ->addValue('msg_template_id', $mtId)
-      ->addValue('languages', $languages)
-      ->execute();
+      ->addValue('languages', $languages)->execute();
   }
 
   protected function entityToken(string $entity): string {
@@ -615,5 +635,4 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     ];
     return $m[$entity] ?? strtolower($entity);
   }
-
 }
