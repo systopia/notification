@@ -1,6 +1,16 @@
 <?php
 declare(strict_types = 1);
 
+$root = dirname(__DIR__, 2);
+$toolsPhpunitAutoload = $root . '/tools/phpunit/vendor/autoload.php';
+if (is_file($toolsPhpunitAutoload)) {
+  require_once $toolsPhpunitAutoload;
+}
+$ciAutoload = $root . '/ci/vendor/autoload.php';
+if (is_file($ciAutoload)) {
+  require_once $ciAutoload;
+}
+
 use Composer\Autoload\ClassLoader;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -28,6 +38,13 @@ if ('C' === setlocale(LC_TIME, '0')) {
 // phpcs:disable Drupal.Functions.DiscouragedFunctions.Discouraged
 eval(cv('php:boot --level=classloader', 'phpcode'));
 // phpcs:enable
+
+if (!defined('CIVICRM_DSN')) {
+  $settings = '/var/www/html/sites/default/civicrm.settings.php';
+  if (is_readable($settings)) {
+    require_once $settings;
+  }
+}
 
 if (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
   require_once __DIR__ . '/../../vendor/autoload.php';

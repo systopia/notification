@@ -6,6 +6,7 @@ parameters:
 		- ci/vendor/civicrm/civicrm-core/CRM/
 	bootstrapFiles:
 		- ci/vendor/autoload.php
+		- Civi/Notification/Compat/pear_polyfills.php
 	# Because we test with different versions in CI we have unmatched errors
 	reportUnmatchedIgnoredErrors: false
 	ignoreErrors:

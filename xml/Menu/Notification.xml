@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/notification/entities</path>
+    <page_callback>CRM_Notification_Page_EntityConfig</page_callback>
+    <title>Notification Rules</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <is_public>0</is_public>
+    <weight>10</weight>
+  </item>
+
+  <item>
+    <path>civicrm/notification/entity-rule</path>
+    <page_callback>CRM_Notification_Page_EntityRule</page_callback>
+    <title>New Notification Rule</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <is_public>0</is_public>
+    <weight>11</weight>
+  </item>
+
+  <item>
+    <path>civicrm/notification/logs</path>
+    <page_callback>CRM_Notification_Page_Logs</page_callback>
+    <title>Notification Logs</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <is_public>0</is_public>
+    <weight>12</weight>
+  </item>
+
+  <item>
+    <path>civicrm/notification/queue</path>
+    <page_callback>CRM_Notification_Page_Queue</page_callback>
+    <title>Notification Queue</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <is_public>0</is_public>
+    <weight>13</weight>
+  </item>
+
+  <item>
+    <path>civicrm/notification/settings</path>
+    <page_callback>CRM_Notification_Page_Settings</page_callback>
+    <title>Notification Settings</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <is_public>0</is_public>
+    <weight>14</weight>
+  </item>
+</menu>

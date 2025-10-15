@@ -1,0 +1,666 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Access to constant SUCCESS on an unknown class Symfony\\\\Component\\\\Console\\\\Command\\\\Command\\.$#"
+			count: 1
+			path: Civi/Notification/Command/ProcessQueueCommand.php
+
+		-
+			message: "#^Attribute class Symfony\\\\Component\\\\Console\\\\Attribute\\\\AsCommand does not exist\\.$#"
+			count: 1
+			path: Civi/Notification/Command/ProcessQueueCommand.php
+
+		-
+			message: "#^Call to method writeln\\(\\) on an unknown class Symfony\\\\Component\\\\Console\\\\Output\\\\OutputInterface\\.$#"
+			count: 1
+			path: Civi/Notification/Command/ProcessQueueCommand.php
+
+		-
+			message: "#^Civi\\\\Notification\\\\Command\\\\ProcessQueueCommand\\:\\:__construct\\(\\) calls parent\\:\\:__construct\\(\\) but Civi\\\\Notification\\\\Command\\\\ProcessQueueCommand does not extend any class\\.$#"
+			count: 1
+			path: Civi/Notification/Command/ProcessQueueCommand.php
+
+		-
+			message: "#^Parameter \\$input of method Civi\\\\Notification\\\\Command\\\\ProcessQueueCommand\\:\\:execute\\(\\) has invalid type Symfony\\\\Component\\\\Console\\\\Input\\\\InputInterface\\.$#"
+			count: 1
+			path: Civi/Notification/Command/ProcessQueueCommand.php
+
+		-
+			message: "#^Parameter \\$output of method Civi\\\\Notification\\\\Command\\\\ProcessQueueCommand\\:\\:execute\\(\\) has invalid type Symfony\\\\Component\\\\Console\\\\Output\\\\OutputInterface\\.$#"
+			count: 1
+			path: Civi/Notification/Command/ProcessQueueCommand.php
+
+		-
+			message: "#^Property Civi\\\\Notification\\\\Data\\\\NotificationContext\\:\\:\\$extra type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Data/NotificationContext.php
+
+		-
+			message: "#^Offset 'id' does not exist on array\\{id\\: int, display_name\\: string, email\\: string, preferred_language\\: string\\|null\\}\\|null\\.$#"
+			count: 1
+			path: Civi/Notification/Data/NotificationRecipient.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Api4\\\\NotificationCondition\\:\\:get\\(\\)\\.$#"
+			count: 1
+			path: Civi/Notification/Entity/RuleEntity.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Api4\\\\NotificationContactSelection\\:\\:get\\(\\)\\.$#"
+			count: 1
+			path: Civi/Notification/Entity/RuleEntity.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Api4\\\\NotificationFieldMonitoring\\:\\:get\\(\\)\\.$#"
+			count: 1
+			path: Civi/Notification/Entity/RuleEntity.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Api4\\\\NotificationRuleMessageTemplate\\:\\:get\\(\\)\\.$#"
+			count: 1
+			path: Civi/Notification/Entity/RuleEntity.php
+
+		-
+			message: "#^PHPDoc tag @throws with type Civi\\\\API\\\\Exception\\\\UnauthorizedException\\|CRM_Core_Exception is not subtype of Throwable$#"
+			count: 4
+			path: Civi/Notification/Entity/RuleEntity.php
+
+		-
+			message: "#^Property Civi\\\\Notification\\\\Entity\\\\RuleEntity\\:\\:\\$conditions is never read, only written\\.$#"
+			count: 1
+			path: Civi/Notification/Entity/RuleEntity.php
+
+		-
+			message: "#^Property Civi\\\\Notification\\\\Entity\\\\RuleEntity\\:\\:\\$contactSelections is never read, only written\\.$#"
+			count: 1
+			path: Civi/Notification/Entity/RuleEntity.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Api4\\\\NotificationRule\\:\\:get\\(\\)\\.$#"
+			count: 1
+			path: Civi/Notification/Entity/RuleSetEntity.php
+
+		-
+			message: "#^PHPDoc tag @throws with type Civi\\\\API\\\\Exception\\\\UnauthorizedException\\|CRM_Core_Exception is not subtype of Throwable$#"
+			count: 1
+			path: Civi/Notification/Entity/RuleSetEntity.php
+
+		-
+			message: "#^Call to static method get\\(\\) on an unknown class Civi\\\\Api4\\\\Contact\\.$#"
+			count: 1
+			path: Civi/Notification/EntityService/ContactLoader.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Api4\\\\NotificationRuleSet\\:\\:get\\(\\)\\.$#"
+			count: 2
+			path: Civi/Notification/EntityService/RuleSetManager.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Event\\\\EventFactory\\:\\:fromHook\\(\\) has parameter \\$after with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Event/EventFactory.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Event\\\\EventFactory\\:\\:fromHook\\(\\) has parameter \\$before with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Event/EventFactory.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Event\\\\EventFactory\\:\\:fromHook\\(\\) has parameter \\$context with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Event/EventFactory.php
+
+		-
+			message: "#^Property Civi\\\\Notification\\\\Event\\\\EventFactory\\:\\:\\$snapshots is never read, only written\\.$#"
+			count: 1
+			path: Civi/Notification/Event/EventFactory.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Event\\\\EventFactoryInterface\\:\\:fromHook\\(\\) has parameter \\$after with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Event/EventFactoryInterface.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Event\\\\EventFactoryInterface\\:\\:fromHook\\(\\) has parameter \\$before with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Event/EventFactoryInterface.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Event\\\\EventFactoryInterface\\:\\:fromHook\\(\\) has parameter \\$context with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Event/EventFactoryInterface.php
+
+		-
+			message: "#^Access to property \\$action on an unknown class Civi\\\\Core\\\\Event\\\\PreEvent\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Access to property \\$entity on an unknown class Civi\\\\Core\\\\Event\\\\PostEvent\\.$#"
+			count: 6
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Access to property \\$entity on an unknown class Civi\\\\Core\\\\Event\\\\PreEvent\\.$#"
+			count: 3
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Access to property \\$id on an unknown class Civi\\\\Core\\\\Event\\\\PostEvent\\.$#"
+			count: 5
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Access to property \\$id on an unknown class Civi\\\\Core\\\\Event\\\\PreEvent\\.$#"
+			count: 3
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Access to property \\$params on an unknown class Civi\\\\Core\\\\Event\\\\PreEvent\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Call to an undefined method object\\:\\:get\\(\\)\\.$#"
+			count: 2
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Call to method execute\\(\\) on an unknown class Civi\\\\Api4\\\\Generic\\\\AbstractAction\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Call to static method container\\(\\) on an unknown class Civi\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Call to static method create\\(\\) on an unknown class Civi\\\\API\\\\Request\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Cannot call method evaluateRuleSet\\(\\) on mixed\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Cannot call method hasActiveRuleSets\\(\\) on mixed\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Cannot call method loadRuleSetByEntityType\\(\\) on mixed\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Empty catch block\\. If you are sure this is meant to be empty, please add a \"// @ignoreException\" comment in the catch block\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^In method \"Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriber\\:\\:__construct\", caught \"Throwable\" must be rethrown\\. Either catch a more specific exception or add a \"throw\" clause in the \"catch\" block to propagate the exception\\. More info\\: http\\://bit\\.ly/failloud$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriber\\:\\:getSubscribedEvents\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^PHPDoc tag @var for variable \\$apiRequest contains unknown class Civi\\\\Api4\\\\Generic\\\\AbstractAction\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Parameter \\$event of method Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriber\\:\\:onPostCommit\\(\\) has invalid type Civi\\\\Core\\\\Event\\\\PostEvent\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Parameter \\$event of method Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriber\\:\\:onPre\\(\\) has invalid type Civi\\\\Core\\\\Event\\\\PreEvent\\.$#"
+			count: 1
+			path: Civi/Notification/EventSubscriber/NotificationSubscriber.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\ValueComparator\\:\\:compareValues\\(\\)\\.$#"
+			count: 1
+			path: Civi/Notification/Handler/ConditionHandler.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\ValueComparator\\:\\:compareValues\\(\\)\\.$#"
+			count: 2
+			path: Civi/Notification/Handler/FieldMonitoringHandler.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Hook\\\\HookHandler\\:\\:onPre\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Hook/HookHandler.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Hook\\\\HookHandler\\:\\:resolveAfter\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Hook/HookHandler.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Hook\\\\HookHandler\\:\\:resolveBefore\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Hook/HookHandler.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Hook\\\\HookHandler\\:\\:resolveBefore\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Hook/HookHandler.php
+
+		-
+			message: "#^Only booleans are allowed in &&, array given on the right side\\.$#"
+			count: 1
+			path: Civi/Notification/Hook/HookHandler.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, Civi\\\\Notification\\\\DTO\\\\NotificationEvent\\|null given\\.$#"
+			count: 1
+			path: Civi/Notification/Hook/HookHandler.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, int\\|string\\|null given\\.$#"
+			count: 2
+			path: Civi/Notification/Hook/HookHandler.php
+
+		-
+			message: "#^Call to static method getNameAndEmail\\(\\) on an unknown class CRM_Core_BAO_Domain\\.$#"
+			count: 1
+			path: Civi/Notification/NotificationSender.php
+
+		-
+			message: "#^Call to static method sendTemplate\\(\\) on an unknown class CRM_Core_BAO_MessageTemplate\\.$#"
+			count: 1
+			path: Civi/Notification/NotificationSender.php
+
+		-
+			message: "#^Call to static method queue\\(\\) on an unknown class Civi\\.$#"
+			count: 1
+			path: Civi/Notification/Queue/CiviQueue.php
+
+		-
+			message: "#^Parameter \\#1 \\$payload \\(array\\<string, mixed\\>\\) of method Civi\\\\Notification\\\\Queue\\\\CiviQueue\\:\\:enqueue\\(\\) should be contravariant with parameter \\$payload \\(array\\) of method Civi\\\\Notification\\\\Queue\\\\QueueInterface\\:\\:enqueue\\(\\)$#"
+			count: 1
+			path: Civi/Notification/Queue/CiviQueue.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Queue\\\\QueueInterface\\:\\:enqueue\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Queue/QueueInterface.php
+
+		-
+			message: "#^Method Civi\\\\Notification\\\\Rule\\\\RuleEvaluatorInterface\\:\\:match\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: Civi/Notification/Rule/RuleEvaluatorInterface.php
+
+		-
+			message: "#^Parameter \\#2 \\$haystack of function in_array expects array, mixed given\\.$#"
+			count: 1
+			path: Civi/Notification/ValueComparator.php
+
+		-
+			message: "#^Call to method addResource\\(\\) on an unknown class Symfony\\\\Component\\\\DependencyInjection\\\\ContainerBuilder\\.$#"
+			count: 2
+			path: notification.php
+
+		-
+			message: "#^Call to method getIterator\\(\\) on an unknown class Symfony\\\\Component\\\\Config\\\\Resource\\\\GlobResource\\.$#"
+			count: 1
+			path: notification.php
+
+		-
+			message: "#^Call to static method container\\(\\) on an unknown class Civi\\.$#"
+			count: 3
+			path: notification.php
+
+		-
+			message: "#^Casting to string something that's already string\\.$#"
+			count: 6
+			path: notification.php
+
+		-
+			message: "#^Function notification_civicrm_pre\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: notification.php
+
+		-
+			message: "#^Instantiated class Symfony\\\\Component\\\\Config\\\\Resource\\\\FileResource not found\\.$#"
+			count: 1
+			path: notification.php
+
+		-
+			message: "#^Instantiated class Symfony\\\\Component\\\\Config\\\\Resource\\\\GlobResource not found\\.$#"
+			count: 1
+			path: notification.php
+
+		-
+			message: "#^Parameter \\$config of function notification_civicrm_config\\(\\) has invalid type CRM_Core_Config\\.$#"
+			count: 1
+			path: notification.php
+
+		-
+			message: "#^Parameter \\$container of function notification_civicrm_container\\(\\) has invalid type Symfony\\\\Component\\\\DependencyInjection\\\\ContainerBuilder\\.$#"
+			count: 1
+			path: notification.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Tests\\\\DTO\\\\ChangeSetTest\\:\\:assertNotNull\\(\\)\\.$#"
+			count: 1
+			path: tests/DTO/ChangeSetTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Tests\\\\DTO\\\\ChangeSetTest\\:\\:assertSame\\(\\)\\.$#"
+			count: 5
+			path: tests/DTO/ChangeSetTest.php
+
+		-
+			message: "#^Cannot access property \\$after on Civi\\\\Notification\\\\DTO\\\\Change\\|null\\.$#"
+			count: 1
+			path: tests/DTO/ChangeSetTest.php
+
+		-
+			message: "#^Cannot access property \\$before on Civi\\\\Notification\\\\DTO\\\\Change\\|null\\.$#"
+			count: 1
+			path: tests/DTO/ChangeSetTest.php
+
+		-
+			message: "#^Cannot access property \\$field on Civi\\\\Notification\\\\DTO\\\\Change\\|null\\.$#"
+			count: 1
+			path: tests/DTO/ChangeSetTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Tests\\\\Event\\\\EventFactoryTest\\:\\:assertNotNull\\(\\)\\.$#"
+			count: 2
+			path: tests/Event/EventFactoryTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Tests\\\\Event\\\\EventFactoryTest\\:\\:assertNull\\(\\)\\.$#"
+			count: 1
+			path: tests/Event/EventFactoryTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Tests\\\\Event\\\\EventFactoryTest\\:\\:assertSame\\(\\)\\.$#"
+			count: 6
+			path: tests/Event/EventFactoryTest.php
+
+		-
+			message: "#^Cannot access property \\$changes on Civi\\\\Notification\\\\DTO\\\\NotificationEvent\\|null\\.$#"
+			count: 2
+			path: tests/Event/EventFactoryTest.php
+
+		-
+			message: "#^Cannot access property \\$entity on Civi\\\\Notification\\\\DTO\\\\NotificationEvent\\|null\\.$#"
+			count: 1
+			path: tests/Event/EventFactoryTest.php
+
+		-
+			message: "#^Cannot access property \\$field on Civi\\\\Notification\\\\DTO\\\\Change\\|null\\.$#"
+			count: 1
+			path: tests/Event/EventFactoryTest.php
+
+		-
+			message: "#^Cannot access property \\$id on Civi\\\\Notification\\\\DTO\\\\NotificationEvent\\|null\\.$#"
+			count: 1
+			path: tests/Event/EventFactoryTest.php
+
+		-
+			message: "#^Cannot access property \\$op on Civi\\\\Notification\\\\DTO\\\\NotificationEvent\\|null\\.$#"
+			count: 2
+			path: tests/Event/EventFactoryTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Tests\\\\Queue\\\\EnqueuerTest\\:\\:assertCount\\(\\)\\.$#"
+			count: 1
+			path: tests/Queue/EnqueuerTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Tests\\\\Queue\\\\EnqueuerTest\\:\\:assertSame\\(\\)\\.$#"
+			count: 8
+			path: tests/Queue/EnqueuerTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Tests\\\\Snapshot\\\\SnapshotStoreTest\\:\\:assertSame\\(\\)\\.$#"
+			count: 1
+			path: tests/Snapshot/SnapshotStoreTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Tests\\\\Util\\\\EntityRefTest\\:\\:assertNull\\(\\)\\.$#"
+			count: 1
+			path: tests/Util/EntityRefTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Tests\\\\Util\\\\EntityRefTest\\:\\:assertSame\\(\\)\\.$#"
+			count: 11
+			path: tests/Util/EntityRefTest.php
+
+		-
+			message: "#^AbstractNotificationHeadlessTestCase\\:\\:setUp\\(\\) calls parent\\:\\:setUp\\(\\) but AbstractNotificationHeadlessTestCase does not extend any class\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/AbstractExternalFileHeadlessTestCase.php
+
+		-
+			message: "#^Call to static method headless\\(\\) on an unknown class Civi\\\\Test\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/AbstractExternalFileHeadlessTestCase.php
+
+		-
+			message: "#^Call to static method singleton\\(\\) on an unknown class CRM_Core_Config\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/AbstractExternalFileHeadlessTestCase.php
+
+		-
+			message: "#^Method AbstractNotificationHeadlessTestCase\\:\\:setUpHeadless\\(\\) has invalid return type Civi\\\\Test\\\\CiviEnvBuilder\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/AbstractExternalFileHeadlessTestCase.php
+
+		-
+			message: "#^Access to constant SUCCESS on an unknown class Symfony\\\\Component\\\\Console\\\\Command\\\\Command\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/Command/ProcessQueueCommandTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Command\\\\ProcessQueueCommand\\:\\:run\\(\\)\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/Command/ProcessQueueCommandTest.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Notification\\\\Tests\\\\Civi\\\\Notification\\\\Command\\\\ProcessQueueCommandTest\\:\\:assertSame\\(\\)\\.$#"
+			count: 3
+			path: tests/phpunit/Civi/Notification/Command/ProcessQueueCommandTest.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Notification\\\\Tests\\\\Civi\\\\Notification\\\\Command\\\\ProcessQueueCommandTest\\:\\:assertStringContainsString\\(\\)\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/Command/ProcessQueueCommandTest.php
+
+		-
+			message: "#^Call to method fetch\\(\\) on an unknown class Symfony\\\\Component\\\\Console\\\\Output\\\\BufferedOutput\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/Command/ProcessQueueCommandTest.php
+
+		-
+			message: "#^Instantiated class Symfony\\\\Component\\\\Console\\\\Input\\\\ArrayInput not found\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/Command/ProcessQueueCommandTest.php
+
+		-
+			message: "#^Instantiated class Symfony\\\\Component\\\\Console\\\\Output\\\\BufferedOutput not found\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/Command/ProcessQueueCommandTest.php
+
+		-
+			message: "#^Access to property \\$action on an unknown class Civi\\\\Core\\\\Event\\\\PreEvent\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Access to property \\$entity on an unknown class Civi\\\\Core\\\\Event\\\\PostEvent\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Access to property \\$entity on an unknown class Civi\\\\Core\\\\Event\\\\PreEvent\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Access to property \\$id on an unknown class Civi\\\\Core\\\\Event\\\\PostEvent\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Access to property \\$id on an unknown class Civi\\\\Core\\\\Event\\\\PreEvent\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Access to property \\$params on an unknown class Civi\\\\Core\\\\Event\\\\PreEvent\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest\\:\\:createMock\\(\\)\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest\\:\\:exactly\\(\\)\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest\\:\\:getMockBuilder\\(\\)\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest\\:\\:isInstanceOf\\(\\)\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest\\:\\:assertArrayHasKey\\(\\)\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest\\:\\:assertIsArray\\(\\)\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest\\:\\:assertSame\\(\\)\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to an undefined static method Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest\\:\\:assertTrue\\(\\)\\.$#"
+			count: 4
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to function method_exists\\(\\) with 'Civi\\\\\\\\Notification\\\\\\\\EventSubscriber\\\\\\\\NotificationSubscriber' and 'onPostCommit' will always evaluate to true\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to function method_exists\\(\\) with 'Civi\\\\\\\\Notification\\\\\\\\EventSubscriber\\\\\\\\NotificationSubscriber' and 'onPre' will always evaluate to true\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to method expects\\(\\) on an unknown class PHPUnit\\\\Framework\\\\MockObject\\\\MockObject\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to method method\\(\\) on an unknown class PHPUnit\\\\Framework\\\\MockObject\\\\MockObject\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Cannot access offset 'Contact' on mixed\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Cannot access offset 123 on mixed\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest\\:\\:setUp\\(\\) calls parent\\:\\:setUp\\(\\) but Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest does not extend any class\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Class Civi\\\\Core\\\\Event\\\\PostEvent not found\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Class Civi\\\\Core\\\\Event\\\\PreEvent not found\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Property Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest\\:\\:\\$entityManagerMock has unknown class PHPUnit\\\\Framework\\\\MockObject\\\\MockObject as its type\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Property Civi\\\\Notification\\\\EventSubscriber\\\\NotificationSubscriberTest\\:\\:\\$ruleSetHandlerMock has unknown class PHPUnit\\\\Framework\\\\MockObject\\\\MockObject as its type\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/EventSubscriber/NotificationSubscriberTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Handler\\\\RuleSetHandlerTest\\:\\:addToAssertionCount\\(\\)\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/Handler/RuleSetHandlerTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Handler\\\\RuleSetHandlerTest\\:\\:anything\\(\\)\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/Handler/RuleSetHandlerTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Handler\\\\RuleSetHandlerTest\\:\\:createMock\\(\\)\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/Handler/RuleSetHandlerTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Handler\\\\RuleSetHandlerTest\\:\\:getMockBuilder\\(\\)\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/Handler/RuleSetHandlerTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Handler\\\\RuleSetHandlerTest\\:\\:never\\(\\)\\.$#"
+			count: 1
+			path: tests/phpunit/Civi/Notification/Handler/RuleSetHandlerTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Source\\\\ValueComparatorTest\\:\\:assertFalse\\(\\)\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/Source/ValueComparatorTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Source\\\\ValueComparatorTest\\:\\:assertTrue\\(\\)\\.$#"
+			count: 4
+			path: tests/phpunit/Civi/Notification/Source/ValueComparatorTest.php
+
+		-
+			message: "#^Call to an undefined method Civi\\\\Notification\\\\Source\\\\ValueComparatorTest\\:\\:expectException\\(\\)\\.$#"
+			count: 2
+			path: tests/phpunit/Civi/Notification/Source/ValueComparatorTest.php
