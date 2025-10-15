@@ -7,28 +7,17 @@ class CRM_Notification_Page_Queue extends CRM_Core_Page {
     // phpcs:enable
     $queueName = 'notification.jobs';
 
-    $q       = (string) CRM_Utils_Request::retrieve('q', 'String', $this, FALSE, '');
-    $limit   = (int) CRM_Utils_Request::retrieve('limit', 'Positive', $this, FALSE, 50);
-    $page    = (int) CRM_Utils_Request::retrieve('page', 'Positive', $this, FALSE, 1);
-    $sort    = (string) CRM_Utils_Request::retrieve('sort', 'String', $this, FALSE, 'submit_time');
-    $order   = (string) CRM_Utils_Request::retrieve('order', 'String', $this, FALSE, 'desc');
+    $q       = $this->toString(CRM_Utils_Request::retrieve('q', 'String', $this, FALSE, ''));
+    $limit   = $this->toInt(CRM_Utils_Request::retrieve('limit', 'Positive', $this, FALSE, 50));
+    $page    = $this->toInt(CRM_Utils_Request::retrieve('page', 'Positive', $this, FALSE, 1));
+    $sort    = $this->toString(CRM_Utils_Request::retrieve('sort', 'String', $this, FALSE, 'submit_time'));
+    $order   = $this->toString(CRM_Utils_Request::retrieve('order', 'String', $this, FALSE, 'desc'));
 
     $statusOptions = ['pending', 'processed'];
-    $rawStatuses = [];
-    if (isset($_GET['status'])) {
-      $in = $_GET['status'];
-      if (!is_array($in)) {
-        $rawStatuses = [$in];
-      }
-      else {
-        $rawStatuses = [];
-        $it = new RecursiveIteratorIterator(new RecursiveArrayIterator($in));
-        foreach ($it as $v) {
-          $rawStatuses[] = (string) $v;
-        }
-      }
-    }
-    $statuses = array_values(array_intersect($statusOptions, array_map('strval', (array) $rawStatuses)));
+    /** @var mixed $statusReq */
+    $statusReq = CRM_Utils_Request::retrieve('status', 'Array', $this, FALSE, []);
+    $rawStatuses = $this->normalizeToStringArray($statusReq);
+    $statuses = array_values(array_intersect($statusOptions, $rawStatuses));
 
     // Defaults
     if ($limit <= 0) {
@@ -54,7 +43,7 @@ class CRM_Notification_Page_Queue extends CRM_Core_Page {
       $args[2] = [$like, 'String'];
     }
 
-    if (!empty($statuses)) {
+    if (count($statuses) > 0) {
       $conds = [];
       foreach ($statuses as $st) {
         if ($st === 'pending') {
@@ -64,12 +53,12 @@ class CRM_Notification_Page_Queue extends CRM_Core_Page {
           $conds[] = 'run_count > 0';
         }
       }
-      if ($conds) {
+      if ($conds !== []) {
         $where[] = '(' . implode(' OR ', $conds) . ')';
       }
     }
 
-    $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+    $whereSql = 'WHERE ' . implode(' AND ', $where);
 
     $count = (int) CRM_Core_DAO::singleValueQuery(
       "SELECT COUNT(*) FROM civicrm_queue_item {$whereSql}",
@@ -80,7 +69,7 @@ class CRM_Notification_Page_Queue extends CRM_Core_Page {
     if ($page > $totalPages) {
       $page = $totalPages;
     }
-    $offset = ($page - 1) * $limit;
+    $offset  = ($page - 1) * $limit;
     $hasPrev = $page > 1;
     $hasNext = $page < $totalPages;
     $prevPage = $hasPrev ? ($page - 1) : 1;
@@ -97,12 +86,23 @@ class CRM_Notification_Page_Queue extends CRM_Core_Page {
     $args[4] = [$offset, 'Integer'];
 
     $rows = [];
+    /** @var \CRM_Core_DAO&object{
+     *   id:mixed,
+     *   submit_time:mixed,
+     *   release_time:mixed,
+     *   run_count:mixed,
+     *   data:mixed
+     * } $dao
+     */
     $dao = CRM_Core_DAO::executeQuery($sql, $args);
+    // @phpstan-ignore-next-line fetch() exists on CRM_Core_DAO at runtime
     while ($dao->fetch()) {
-      $payload = @unserialize((string) $dao->data);
+      $payloadRaw = $this->toString($dao->data ?? '');
 
+      $payload = @unserialize($payloadRaw);
       $callback  = NULL;
       $arguments = NULL;
+
       if (is_array($payload)) {
         $callback  = $payload['callback'] ?? NULL;
         $arguments = $payload['arguments'] ?? NULL;
@@ -118,14 +118,20 @@ class CRM_Notification_Page_Queue extends CRM_Core_Page {
 
       $out = ['callback' => $callback, 'arguments' => $arguments];
       $pretty  = json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+      $pretty  = $pretty !== FALSE ? $pretty : '{}';
       $preview = mb_strimwidth($pretty, 0, 120, '…', 'UTF-8');
 
+      $runCount   = $this->toInt($dao->run_count ?? 0);
+      $submitted  = $this->formatDateOrEmpty($this->toString($dao->submit_time ?? ''));
+      $released   = $this->formatDateOrEmpty($this->toString($dao->release_time ?? ''));
+
       $rows[] = [
-        'id'          => (int) $dao->id,
-        'submitted'   => $dao->submit_time ? date('Y-m-d H:i:s', strtotime($dao->submit_time)) : '',
-        'release'     => $dao->release_time ? date('Y-m-d H:i:s', strtotime($dao->release_time)) : '',
-        'statusText'  => ((int) $dao->run_count > 0) ?
-        ts('Processed (%1)', [1 => (int) $dao->run_count]) : ts('Pending'),
+        'id'          => $this->toInt($dao->id ?? 0),
+        'submitted'   => $submitted,
+        'release'     => $released,
+        'statusText'  => ($runCount > 0)
+        ? ts('Processed (%1)', [1 => $runCount])
+        : ts('Pending'),
         'preview'     => $preview,
         'payloadJson' => $pretty,
       ];
@@ -137,7 +143,7 @@ class CRM_Notification_Page_Queue extends CRM_Core_Page {
       'sort'  => $sort,
       'order' => $order,
     ];
-    if (!empty($statuses)) {
+    if (count($statuses) > 0) {
       $baseParams['status'] = $statuses;
     }
     $baseQ = http_build_query($baseParams, '', '&');
@@ -147,7 +153,7 @@ class CRM_Notification_Page_Queue extends CRM_Core_Page {
       $orderMap[$col] = ($sort === $col && $order === 'asc') ? 'desc' : 'asc';
     }
 
-    $selfUrl  = CRM_Utils_System::url('civicrm/notification/queue', NULL, TRUE, NULL, FALSE);
+    $selfUrl  = CRM_Utils_System::url('civicrm/notification/queue', [], TRUE, NULL, FALSE);
     $resetUrl = $selfUrl;
 
     // Smarty
@@ -177,7 +183,7 @@ class CRM_Notification_Page_Queue extends CRM_Core_Page {
     $this->assign('order', $order);
 
     $this->assign('count', $count);
-    $this->assign('fromItem', $count ? ($offset + 1) : 0);
+    $this->assign('fromItem', ($count > 0) ? ($offset + 1) : 0);
     $this->assign('toItem', min($offset + $limit, $count));
 
     $res = CRM_Core_Resources::singleton();
@@ -185,6 +191,60 @@ class CRM_Notification_Page_Queue extends CRM_Core_Page {
     $res->addStyleFile('notification', 'templates/CRM/Notification/Page/queue.css', 100);
 
     parent::run();
+  }
+
+  /* ===== Helpers ===== */
+
+  /**
+   * @return array<int,string>
+   */
+  private function normalizeToStringArray(mixed $v): array {
+    $out = [];
+    $it = new RecursiveIteratorIterator(new RecursiveArrayIterator((array) $v));
+    foreach ($it as $val) {
+      $s = $this->toString($val);
+      if ($s !== '') {
+        $out[] = $s;
+      }
+    }
+    return array_values(array_unique($out));
+  }
+
+  private function toInt(mixed $value): int {
+    if (is_int($value)) {
+      return $value;
+    }
+    if (is_float($value)) {
+      return (int) $value;
+    }
+    if (is_string($value)) {
+      $v = trim($value);
+      if ($v !== '' && preg_match('/^-?\d+$/', $v) === 1) {
+        return (int) $v;
+      }
+    }
+    return 0;
+  }
+
+  private function toString(mixed $value): string {
+    if (is_string($value)) {
+      return $value;
+    }
+    if (is_int($value) || is_float($value)) {
+      return (string) $value;
+    }
+    return '';
+  }
+
+  private function formatDateOrEmpty(string $raw): string {
+    if ($raw === '') {
+      return '';
+    }
+    $ts = strtotime($raw);
+    if ($ts === FALSE) {
+      return '';
+    }
+    return date('Y-m-d H:i:s', $ts);
   }
 
 }

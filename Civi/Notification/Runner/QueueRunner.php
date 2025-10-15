@@ -50,32 +50,26 @@ final class QueueRunner {
       /** @var array<string,mixed> $contextArr */
       $contextArr = (isset($payload['context']) && is_array($payload['context'])) ? $payload['context'] : [];
 
-      $changesArr = [];
+      /** @var array<string, array{0:mixed,1:mixed}> $changeSet */
+      $changeSet = [];
       $rawChanges = $payload['changes'] ?? NULL;
 
-      if (is_array($rawChanges) && $rawChanges) {
-
+      if (is_array($rawChanges) && count($rawChanges) > 0) {
         foreach ($rawChanges as $chg) {
           if (is_array($chg) && isset($chg['field'])) {
-            $changesArr[] = [
-              'field'  => is_string($chg['field']) ? $chg['field'] : (string) $chg['field'],
-              'before' => $chg['before'] ?? NULL,
-              'after'  => $chg['after'] ?? NULL,
-            ];
+            $field = is_string($chg['field']) ? $chg['field'] : (string) $chg['field'];
+            $before = $chg['before'] ?? NULL;
+            $after  = $chg['after'] ?? NULL;
+            $changeSet[$field] = [$before, $after];
           }
         }
       }
       else {
-
         foreach (array_unique(array_merge(array_keys($beforeArr), array_keys($afterArr))) as $k) {
           $b = $beforeArr[$k] ?? NULL;
           $a = $afterArr[$k] ?? NULL;
           if ($b !== $a) {
-            $changesArr[] = [
-              'field'  => (string) $k,
-              'before' => $b,
-              'after'  => $a,
-            ];
+            $changeSet[(string) $k] = [$b, $a];
           }
         }
       }
@@ -83,11 +77,7 @@ final class QueueRunner {
       $context = new NotificationContext(
         $beforeArr,
         $afterArr,
-        $changesArr,
-        $entity,
-        $op,
-        $id,
-        $contextArr
+        $changeSet
       );
 
       /** @var \Civi\Notification\EntityService\RuleSetManager $em */

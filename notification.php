@@ -18,9 +18,17 @@ function notification_civicrm_config(\CRM_Core_Config $config): void {
 
   $tplDir = __DIR__ . DIRECTORY_SEPARATOR . 'templates';
   $smarty = CRM_Core_Smarty::singleton();
-  $dirs = (array) $smarty->getTemplateDir();
+
+  $dirs = [];
+  if (is_object($smarty) && method_exists($smarty, 'getTemplateDir')) {
+    /** @var mixed $maybeDirs */
+    $maybeDirs = $smarty->getTemplateDir();
+    $dirs = (array) $maybeDirs;
+  }
   if (!in_array($tplDir, $dirs, TRUE)) {
-    $smarty->addTemplateDir($tplDir);
+    if (is_object($smarty) && method_exists($smarty, 'addTemplateDir')) {
+      $smarty->addTemplateDir($tplDir);
+    }
   }
 }
 
@@ -93,10 +101,12 @@ function notification_civicrm_post(string $op, string $objectName, int|string|nu
   $handler->onPost((string) $op, (string) $objectName, $objectId, $objectRef);
 }
 
-function notification_civicrm_postCommit(string $op,
-                                         string $objectName,
-                                         int|string|null $objectId,
-                                         mixed &$objectRef): void {
+function notification_civicrm_postCommit(
+  string $op,
+  string $objectName,
+  int|string|null $objectId,
+  mixed &$objectRef
+): void {
   $c = \Civi::container();
   if (!$c->has('notification.hook_handler')) {
     return;
@@ -107,9 +117,9 @@ function notification_civicrm_postCommit(string $op,
 }
 
 /**
- * @param array $files
+ * @param array<int,string> $files
  */
-function notification_civicrm_xmlMenu(&$files): void {
+function notification_civicrm_xmlMenu(array &$files): void {
   if (function_exists('_notification_civix_civicrm_xmlMenu')) {
     _notification_civix_civicrm_xmlMenu($files);
   }
@@ -117,10 +127,11 @@ function notification_civicrm_xmlMenu(&$files): void {
 }
 
 /**
+ * @param array<string,mixed> $menu
  */
-function notification_civicrm_navigationMenu(&$menu): void {
-  $adminId = CRM_Core_DAO::singleValueQuery("SELECT id FROM civicrm_navigation WHERE name = 'Administer'");
-  if (!$adminId) {
+function notification_civicrm_navigationMenu(array &$menu): void {
+  $adminId = (int) CRM_Core_DAO::singleValueQuery("SELECT id FROM civicrm_navigation WHERE name = 'Administer'");
+  if ($adminId === 0) {
     return;
   }
   $max = 1 + (int) CRM_Core_DAO::singleValueQuery(
@@ -185,8 +196,9 @@ function notification_civicrm_navigationMenu(&$menu): void {
 }
 
 /**
+ * @param array<string,mixed> $items
  */
-function notification_civicrm_alterMenu(&$items): void {
+function notification_civicrm_alterMenu(array &$items): void {
   $ensure = function (array &$items, string $path, array $attrs): void {
     if (!isset($items[$path])) {
       $items[$path] = [
@@ -230,7 +242,7 @@ function notification_civicrm_alterMenu(&$items): void {
     'civicrm/notification/logs',
     'civicrm/notification/queue',
   ] as $path) {
-    if (!empty($items[$path])) {
+    if (array_key_exists($path, $items)) {
       unset($items[$path]['page_arguments']);
     }
   }
@@ -256,15 +268,22 @@ function notification_civicrm_init(): void {
 }
 
 /**
+ * @param string $formName
+ * @param \CRM_Core_Form $form
  */
-function notification_civicrm_buildForm($formName, &$form) {
+function notification_civicrm_buildForm(string $formName, \CRM_Core_Form &$form): void {
   if ($formName !== 'CRM_Notification_Form_EntityRuleWizard') {
     return;
   }
 
+  $entityType = 'Activity';
+  if (isset($form->_defaults['entity_type']) && is_string($form->_defaults['entity_type'])) {
+    $entityType = $form->_defaults['entity_type'];
+  }
+
   Civi::resources()->addVars('notificationErw', [
     'formName'   => $form->getName(),
-    'entityType' => (string) CRM_Utils_Array::value('entity_type', $form->_defaults, 'Activity'),
+    'entityType' => $entityType,
   ]);
 
   Civi::resources()->addScriptFile(

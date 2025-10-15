@@ -15,8 +15,8 @@ class MsgTemplateDeterminer implements MsgTemplateDeterminerInterface {
    */
   // phpcs:disable Generic.Metrics.CyclomaticComplexity.TooHigh
   public function determineMessageTemplateId(NotificationRecipient $recipient, array $messageTemplates): ?int {
-  // phpcs:enable
-    if (!$messageTemplates) {
+    // phpcs:enable
+    if ($messageTemplates === []) {
       return NULL;
     }
 
@@ -34,6 +34,7 @@ class MsgTemplateDeterminer implements MsgTemplateDeterminerInterface {
       }
 
       $id = (int) $tpl->getMsgTemplateId();
+      /** @var array<int,string> $langs */
       $langs = array_map([$this, 'normalizeLang'], (array) $tpl->getLanguages());
 
       if ($firstTemplateId === NULL) {
@@ -45,7 +46,7 @@ class MsgTemplateDeterminer implements MsgTemplateDeterminerInterface {
         return $id;
       }
 
-      if (empty($langs) && $wildcardTemplate === NULL) {
+      if ($langs === [] && $wildcardTemplate === NULL) {
         $wildcardTemplate = $id;
       }
 

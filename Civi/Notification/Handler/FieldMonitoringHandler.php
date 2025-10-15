@@ -17,23 +17,25 @@ final class FieldMonitoringHandler implements FieldMonitoringHandlerInterface {
   public function evaluate(FieldMonitoringEntity $monitoring, NotificationContext $context): bool {
     $field = $monitoring->getFieldName();
 
-    $beforeOp = (string) $monitoring->getOperatorBefore();
+    // sin cast redundante
+    $beforeOp  = $monitoring->getOperatorBefore();
     $beforeExp = $monitoring->getValueBefore();
 
-    $afterOp = (string) $monitoring->getOperatorAfter();
-    $afterExp = $monitoring->getValueAfter();
+    // sin cast redundante
+    $afterOp   = $monitoring->getOperatorAfter();
+    $afterExp  = $monitoring->getValueAfter();
 
     $old = $context->getOldValues()[$field] ?? NULL;
     $new = $context->getNewValues()[$field] ?? NULL;
 
     DbLogger::log('debug', 'fieldmonitoring.compare', 'Comparing field monitoring', [
-      'field' => $field,
-      'before_op' => $beforeOp,
+      'field'      => $field,
+      'before_op'  => $beforeOp,
       'before_exp' => $beforeExp,
       'before_act' => $old,
-      'after_op' => $afterOp,
-      'after_exp' => $afterExp,
-      'after_act' => $new,
+      'after_op'   => $afterOp,
+      'after_exp'  => $afterExp,
+      'after_act'  => $new,
     ]);
 
     return $this->valueComparator->compareValues(

@@ -23,12 +23,12 @@ final class RuleHandler implements RuleHandlerInterface {
   ) {}
 
   public function evaluateRule(RuleEntity $rule, NotificationContext $context): bool {
-    $rid   = method_exists($rule, 'getId') ? $rule->getId() : NULL;
-    $title = method_exists($rule, 'getTitle') ? $rule->getTitle() : NULL;
+    $rid   = $rule->getId();
+    $title = method_exists($rule, 'getTitle') ? (string) $rule->getTitle() : '';
 
     DbLogger::log('debug', 'rule.match-check', 'Checking rule match', [
       'rule_id' => $rid,
-      'title' => $title,
+      'title'   => $title,
     ]);
 
     $matched = $this->ruleMatchChecker->isRuleMatched($rule, $context);
@@ -44,9 +44,10 @@ final class RuleHandler implements RuleHandlerInterface {
       }
       catch (\Throwable $e) {
         DbLogger::log('error', 'rule.send', 'Exception while sending notifications', [
-          'rule_id' => $rid,
+          'rule_id'   => $rid,
           'exception' => $e,
         ]);
+        throw $e;
       }
       return TRUE;
     }
@@ -54,99 +55,121 @@ final class RuleHandler implements RuleHandlerInterface {
   }
 
   private function sendNotifications(RuleEntity $rule, NotificationContext $context): void {
-    $rid = method_exists($rule, 'getId') ? $rule->getId() : NULL;
+    $rid = $rule->getId();
 
     $tokenContext = $this->tokenContextGenerator->generateTokenContext($rule, $context);
     $recipients   = $this->getNotificationRecipients($rule);
 
     DbLogger::log('info', 'rule.recipients', 'Recipients resolved', [
       'rule_id' => $rid,
-      'count' => count($recipients),
+      'count'   => count($recipients),
     ]);
 
     foreach ($recipients as $recipient) {
+      /** @var int|null $templateId */
       $templateId = $this->messageTemplateDeterminer->determineMessageTemplateId(
-        $recipient, $rule->getMsgTemplates()
+        $recipient,
+        $rule->getMsgTemplates()
       );
+      $tid = is_int($templateId) ? $templateId : 0;
 
       DbLogger::log('debug', 'rule.send.start', 'Sending to recipient', [
-        'rule_id' => $rid,
-        'template_id' => $templateId,
+        'rule_id'     => $rid,
+        'template_id' => $tid,
       ]);
 
-      $this->notificationSender->sendNotification((int) ($templateId ?? 0), $recipient, $tokenContext);
+      $this->notificationSender->sendNotification($tid, $recipient, $tokenContext);
 
       DbLogger::log('debug', 'rule.send.done', 'Sent to recipient', [
-        'rule_id' => $rid,
-        'template_id' => $templateId,
+        'rule_id'     => $rid,
+        'template_id' => $tid,
       ]);
     }
   }
 
   /**
-   * @return list<NotificationRecipient> */
+   * @return list<NotificationRecipient>
+   */
   // phpcs:disable Generic.Metrics.CyclomaticComplexity.TooHigh
   private function getNotificationRecipients(RuleEntity $rule): array {
-  // phpcs:enable
+    // phpcs:enable
 
     $emails = $rule->getEmailAddresses();
     if ($emails !== NULL) {
       $out = [];
       foreach ((array) $emails as $val) {
-        if (is_string($val) && $val !== '') {
-
-          $out[] = new NotificationRecipient($val, NULL);
+        if (is_string($val)) {
+          $email = trim($val);
+          if ($email !== '') {
+            $out[] = new NotificationRecipient($email, NULL);
+            continue;
+          }
         }
-        elseif (is_int($val) && $val > 0) {
 
+        $contactId = NULL;
+        if (is_int($val)) {
+          $contactId = $val;
+        }
+        elseif (is_string($val) && $val !== '' && ctype_digit($val)) {
+          $contactId = (int) $val;
+        }
+
+        if ($contactId !== NULL && $contactId > 0) {
           try {
             $emailRow = \Civi\Api4\Email::get(FALSE)
-              ->addWhere('contact_id', '=', $val)
+              ->addWhere('contact_id', '=', $contactId)
               ->addOrderBy('is_primary', 'DESC')->addOrderBy('id', 'DESC')
               ->addSelect('email')
               ->setLimit(1)
               ->execute()
               ->single();
 
-            $email = is_string($emailRow['email'] ?? NULL) ? $emailRow['email'] : NULL;
+            $email = $emailRow['email'] ?? NULL;
 
-            if ($email) {
+            if (!is_string($email) || $email === '') {
+              DbLogger::log('warning', 'rule.recipients', 'No email for contact_id in emailAddresses', [
+                'contact_id' => $contactId,
+              ]);
+            }
+            else {
               $cRow = \Civi\Api4\Contact::get(FALSE)
-                ->addWhere('id', '=', $val)
+                ->addWhere('id', '=', $contactId)
                 ->addSelect('display_name', 'preferred_language')
                 ->setLimit(1)
                 ->execute()
                 ->single();
 
+              $displayName = $cRow['display_name'] ?? '';
+              $display = is_string($displayName) ? $displayName : '';
+              $prefLang = isset($cRow['preferred_language']) && is_string($cRow['preferred_language'])
+                ? $cRow['preferred_language'] : NULL;
+
               /** @var array{id:int,display_name:string,email:string,preferred_language:?string} $cd */
               $cd = [
-                'id' => $val,
-                'display_name' => (string) ($cRow['display_name'] ?? ''),
+                'id' => $contactId,
+                'display_name' => $display,
                 'email' => $email,
-                'preferred_language' => $cRow['preferred_language'] ?? NULL,
+                'preferred_language' => $prefLang,
               ];
 
               $out[] = new NotificationRecipient($email, $cd);
 
               DbLogger::log('debug', 'rule.recipients', 'Resolved email from contact_id', [
-                'contact_id' => $val,
+                'contact_id' => $contactId,
                 'email' => $email,
-              ]);
-            }
-            else {
-              DbLogger::log('warning', 'rule.recipients', 'No email for contact_id in emailAddresses', [
-                'contact_id' => $val,
               ]);
             }
           }
           catch (\Throwable $e) {
-            DbLogger::log('warning', 'rule.recipients', 'Lookup primary email failed (emailAddresses int)', [
-              'contact_id' => $val,
-              'exception' => $e,
+            DbLogger::log('warning', 'rule.recipients', 'Lookup primary email failed (emailAddresses contact_id)', [
+              'contact_id' => $contactId,
+              'exception'  => $e,
             ]);
+            throw $e;
           }
         }
       }
+      /** @var list<NotificationRecipient> $out */
       return $out;
     }
 
@@ -155,6 +178,7 @@ final class RuleHandler implements RuleHandlerInterface {
       $got = $this->contactLoader->getContacts($sel, $rule->getPreferredLocationTypeId());
       $recipients = array_merge($recipients, $got);
     }
+    /** @var list<NotificationRecipient> $recipients */
     return $recipients;
   }
 

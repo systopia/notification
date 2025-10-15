@@ -19,7 +19,7 @@ final class ValueComparator {
 
   // phpcs:disable Generic.Metrics.CyclomaticComplexity.TooHigh
   public function matches(string $operator, mixed $expected, mixed $actual): bool {
-  // phpcs:enable
+    // phpcs:enable
     $op = strtolower(trim($operator));
 
     if (is_string($expected)) {
@@ -34,11 +34,11 @@ final class ValueComparator {
 
     switch ($op) {
       case 'in':
-        return in_array($actual, $list, FALSE);
+        return in_array($actual, $list, TRUE);
 
       case 'not in':
       case 'not_in':
-        return !in_array($actual, $list, FALSE);
+        return !in_array($actual, $list, TRUE);
 
       case '=':
       case '==':

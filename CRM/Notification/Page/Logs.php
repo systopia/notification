@@ -4,29 +4,18 @@ declare(strict_types = 1);
 use CRM_Notification_ExtensionUtil as E;
 
 class CRM_Notification_Page_Logs extends CRM_Core_Page {
-  // phpcs:disable Generic.Metrics.CyclomaticComplexity.TooHigh
+  // phpcs:disable Generic.Metrics.CyclomaticComplexity.MaxExceeded
   public function run(): void {
     // phpcs:enable
-    $q       = (string) CRM_Utils_Request::retrieve('q', 'String', $this, FALSE, '');
-    $limit   = (int) CRM_Utils_Request::retrieve('limit', 'Positive', $this, FALSE, 50);
-    $page    = (int) CRM_Utils_Request::retrieve('page', 'Positive', $this, FALSE, 1);
-    $sort    = (string) CRM_Utils_Request::retrieve('sort', 'String', $this, FALSE, 'created_at');
-    $order   = (string) CRM_Utils_Request::retrieve('order', 'String', $this, FALSE, 'desc');
+    $q       = $this->toString(CRM_Utils_Request::retrieve('q', 'String', $this, FALSE, ''));
+    $limit   = $this->toInt(CRM_Utils_Request::retrieve('limit', 'Positive', $this, FALSE, 50));
+    $page    = $this->toInt(CRM_Utils_Request::retrieve('page', 'Positive', $this, FALSE, 1));
+    $sort    = $this->toString(CRM_Utils_Request::retrieve('sort', 'String', $this, FALSE, 'created_at'));
+    $order   = $this->toString(CRM_Utils_Request::retrieve('order', 'String', $this, FALSE, 'desc'));
 
-    $rawLevels = [];
-    if (isset($_GET['level'])) {
-      $in = $_GET['level'];
-      if (!is_array($in)) {
-        $rawLevels = [$in];
-      }
-      else {
-        $rawLevels = [];
-        $it = new RecursiveIteratorIterator(new RecursiveArrayIterator($in));
-        foreach ($it as $v) {
-          $rawLevels[] = (string) $v;
-        }
-      }
-    }
+    /** @var mixed $levelReq */
+    $levelReq = CRM_Utils_Request::retrieve('level', 'Array', $this, FALSE, []);
+    $rawLevels = $this->normalizeToStringArray($levelReq);
 
     if ($limit <= 0) {
       $limit = 50;
@@ -42,7 +31,7 @@ class CRM_Notification_Page_Logs extends CRM_Core_Page {
     $order = strtolower($order) === 'asc' ? 'asc' : 'desc';
 
     $levelOptions = ['debug', 'info', 'warning', 'error'];
-    $levels = array_values(array_intersect($levelOptions, array_map('strval', (array) $rawLevels)));
+    $levels = array_values(array_intersect($levelOptions, $rawLevels));
 
     $where = [];
     $args  = [];
@@ -53,7 +42,7 @@ class CRM_Notification_Page_Logs extends CRM_Core_Page {
       $args[1] = [$like, 'String'];
     }
 
-    if (!empty($levels)) {
+    if (count($levels) > 0) {
       $in = [];
       $i = 10;
       foreach ($levels as $lv) {
@@ -64,7 +53,7 @@ class CRM_Notification_Page_Logs extends CRM_Core_Page {
       $where[] = 'level IN (' . implode(',', $in) . ')';
     }
 
-    $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+    $whereSql = $where !== [] ? ('WHERE ' . implode(' AND ', $where)) : '';
 
     $count = (int) CRM_Core_DAO::singleValueQuery(
       "SELECT COUNT(*) FROM civicrm_notification_log {$whereSql}",
@@ -93,16 +82,26 @@ class CRM_Notification_Page_Logs extends CRM_Core_Page {
     $args[3] = [$offset, 'Integer'];
 
     $rows = [];
+    /** @var \CRM_Core_DAO&object{
+     *   id:mixed,
+     *   created_at:mixed,
+     *   level:mixed,
+     *   area:mixed,
+     *   message:mixed,
+     *   context_json:mixed
+     * } $dao
+     */
     $dao = CRM_Core_DAO::executeQuery($sql, $args);
+    // @phpstan-ignore-next-line
     while ($dao->fetch()) {
-      $json = (string) $dao->context_json;
+      $json   = $this->toString($dao->context_json ?? '');
       $pretty = $this->prettyJson($json);
       $rows[] = [
-        'id'             => (int) $dao->id,
-        'created_at'     => (string) $dao->created_at,
-        'level'          => (string) $dao->level,
-        'area'           => (string) $dao->area,
-        'message'        => (string) $dao->message,
+        'id'             => $this->toInt($dao->id ?? 0),
+        'created_at'     => $this->toString($dao->created_at ?? ''),
+        'level'          => $this->toString($dao->level ?? ''),
+        'area'           => $this->toString($dao->area ?? ''),
+        'message'        => $this->toString($dao->message ?? ''),
         'contextPreview' => mb_strimwidth($pretty, 0, 120, '…', 'UTF-8'),
         'contextJson'    => $pretty,
       ];
@@ -114,7 +113,7 @@ class CRM_Notification_Page_Logs extends CRM_Core_Page {
       'sort'  => $sort,
       'order' => $order,
     ];
-    if (!empty($levels)) {
+    if (count($levels) > 0) {
       $baseParams['level'] = $levels;
     }
     $baseQ = http_build_query($baseParams, '', '&');
@@ -124,7 +123,7 @@ class CRM_Notification_Page_Logs extends CRM_Core_Page {
       $orderMap[$col] = ($sort === $col && $order === 'asc') ? 'desc' : 'asc';
     }
 
-    $selfUrl  = CRM_Utils_System::url('civicrm/notification/logs', NULL, TRUE, NULL, FALSE);
+    $selfUrl  = CRM_Utils_System::url('civicrm/notification/logs', [], TRUE, NULL, FALSE);
     $resetUrl = $selfUrl;
 
     // --- Smarty ---
@@ -147,7 +146,7 @@ class CRM_Notification_Page_Logs extends CRM_Core_Page {
     $this->assign('sort', $sort);
     $this->assign('order', $order);
     $this->assign('count', $count);
-    $this->assign('fromItem', $count ? ($offset + 1) : 0);
+    $this->assign('fromItem', ($count > 0) ? ($offset + 1) : 0);
     $this->assign('toItem', min($offset + $limit, $count));
 
     CRM_Core_Resources::singleton()->addScriptFile('notification', 'js/notification-logs.js', 0, 'page-header');
@@ -161,9 +160,53 @@ class CRM_Notification_Page_Logs extends CRM_Core_Page {
     }
     $decoded = json_decode($json, TRUE);
     if (json_last_error() === JSON_ERROR_NONE) {
-      return json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+      $pretty = json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+      return $pretty !== FALSE ? $pretty : $json;
     }
     return $json;
+  }
+
+  /* ===== Helpers ===== */
+
+  /**
+   * @return array<int,string>
+   */
+  private function normalizeToStringArray(mixed $v): array {
+    $out = [];
+    $it = new RecursiveIteratorIterator(new RecursiveArrayIterator((array) $v));
+    foreach ($it as $val) {
+      $s = $this->toString($val);
+      if ($s !== '') {
+        $out[] = $s;
+      }
+    }
+    return array_values(array_unique($out));
+  }
+
+  private function toInt(mixed $value): int {
+    if (is_int($value)) {
+      return $value;
+    }
+    if (is_float($value)) {
+      return (int) $value;
+    }
+    if (is_string($value)) {
+      $v = trim($value);
+      if ($v !== '' && preg_match('/^-?\d+$/', $v) === 1) {
+        return (int) $v;
+      }
+    }
+    return 0;
+  }
+
+  private function toString(mixed $value): string {
+    if (is_string($value)) {
+      return $value;
+    }
+    if (is_int($value) || is_float($value)) {
+      return (string) $value;
+    }
+    return '';
   }
 
 }

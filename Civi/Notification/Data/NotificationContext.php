@@ -8,21 +8,26 @@ namespace Civi\Notification\Data;
  */
 final class NotificationContext {
   /**
-   * @var array<string,mixed> */
+   * @var array<string,mixed>
+   */
   private array $oldValues;
 
   /**
-   * @var array<string,mixed> */
+   * @var array<string,mixed>
+   */
   private array $newValues;
 
   /**
-   * @var changeSetT */
+   * @var changeSetT
+   */
   private array $changeSet;
 
   /**
    * @param array<string,mixed> $oldValues
    * @param array<string,mixed> $newValues
-   * @param array $changeSet
+   * @param changeSetT $changeSet
+   *
+   * phpcs:disable Drupal.Commenting.FunctionComment.IncorrectTypeHint
    */
   public function __construct(array $oldValues, array $newValues, array $changeSet) {
     $this->oldValues = $oldValues;
@@ -31,31 +36,36 @@ final class NotificationContext {
   }
 
   /**
-   * @return array<string,mixed> */
+   * @return array<string,mixed>
+   */
   public function getOldValues(): array {
     return $this->oldValues;
   }
 
   /**
-   * @return array<string,mixed> */
+   * @return array<string,mixed>
+   */
   public function getNewValues(): array {
     return $this->newValues;
   }
 
   /**
-   * @return changeSetT */
+   * @return changeSetT
+   */
   public function getChangeSet(): array {
     return $this->changeSet;
   }
 
   /**
-   * @return array<string,mixed> */
+   * @return array<string,mixed>
+   */
   public function getBeforeValues(): array {
     return $this->oldValues;
   }
 
   /**
-   * @return array<string,mixed> */
+   * @return array<string,mixed>
+   */
   public function getAfterValues(): array {
     return $this->newValues;
   }

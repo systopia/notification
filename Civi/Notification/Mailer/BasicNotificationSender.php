@@ -11,29 +11,33 @@ final class BasicNotificationSender implements NotificationSenderInterface {
 
   // phpcs:disable Generic.Metrics.CyclomaticComplexity.MaxExceeded
   public function sendNotification(
-  // phpcs:enable
+    // phpcs:enable
     int $msgTemplateId,
     NotificationRecipient $recipient,
     array $tokenContext = []
   ): void {
     $email = $recipient->getEmail();
-    if (!$email) {
+    if ($email === '') {
       DbLogger::log('warning', 'send.email.skip', 'Recipient without email', []);
       return;
     }
 
-    $from = (string) (\Civi::settings()->get('from_email_address') ?: 'Notifications <test@example.org>');
-    $contactId = method_exists($recipient, 'getContactId') ? ($recipient->getContactId() ?: NULL) : NULL;
+    $fromSetting = \Civi::settings()->get('from_email_address');
+    $from = (is_string($fromSetting) && $fromSetting !== '') ? $fromSetting : 'Notifications <test@example.org>';
 
-    $activityId = NULL;
-    $activityId = $activityId ?? ($tokenContext['activityId'] ?? NULL);
-    if (isset($tokenContext['activity']) && is_array($tokenContext['activity'])) {
-      $activityId = $activityId ?? ($tokenContext['activity']['id'] ?? NULL);
+    $contactIdRaw = $recipient->getContactId();
+    $contactId = is_int($contactIdRaw) ? $contactIdRaw : NULL;
+
+    $activityId = $tokenContext['activityId'] ?? NULL;
+    if ($activityId === NULL && isset($tokenContext['activity']) && is_array($tokenContext['activity'])) {
+      $activityId = $tokenContext['activity']['id'] ?? NULL;
     }
-    if (isset($tokenContext['after']) && is_array($tokenContext['after'])) {
-      $activityId = $activityId ?? ($tokenContext['after']['id'] ?? NULL);
+    if ($activityId === NULL && isset($tokenContext['after']) && is_array($tokenContext['after'])) {
+      $activityId = $tokenContext['after']['id'] ?? NULL;
     }
-    $activityId = $activityId ?? ($tokenContext['entity_id'] ?? NULL);
+    if ($activityId === NULL) {
+      $activityId = $tokenContext['entity_id'] ?? NULL;
+    }
 
     if ($msgTemplateId > 0) {
       try {
@@ -58,7 +62,8 @@ final class BasicNotificationSender implements NotificationSenderInterface {
 
         $result = \CRM_Core_BAO_MessageTemplate::sendTemplate($params);
 
-        if (!empty($result['is_error'])) {
+        $isError = isset($result['is_error']) && (bool) $result['is_error'];
+        if ($isError) {
           DbLogger::log('error', 'send.email.template.error', 'sendTemplate returned error', [
             'template_id' => $msgTemplateId,
             'error'       => $result['is_error'],
@@ -77,9 +82,11 @@ final class BasicNotificationSender implements NotificationSenderInterface {
           'template_id' => $msgTemplateId,
           'exception'   => ['type' => get_class($e), 'message' => $e->getMessage()],
         ]);
+        throw $e;
       }
     }
 
+    // ---- Fallback sin plantilla ----
     $subject = NULL;
     $html    = NULL;
     $text    = NULL;
@@ -87,14 +94,14 @@ final class BasicNotificationSender implements NotificationSenderInterface {
     if (isset($tokenContext['subject']) && is_string($tokenContext['subject'])) {
       $subject = $tokenContext['subject'];
     }
-    if (array_key_exists('html', $tokenContext)) {
+    if (array_key_exists('html', $tokenContext) && is_string($tokenContext['html'])) {
       $html = $tokenContext['html'];
     }
-    if (array_key_exists('text', $tokenContext)) {
+    if (array_key_exists('text', $tokenContext) && is_string($tokenContext['text'])) {
       $text = $tokenContext['text'];
     }
 
-    $subject = (string) ($subject ?? 'Notification');
+    $subject = $subject ?? 'Notification';
     if ($html === NULL && $text === NULL) {
       $text = 'You have a new notification.';
     }
@@ -124,6 +131,10 @@ final class BasicNotificationSender implements NotificationSenderInterface {
     ]);
   }
 
+  /**
+   * @param list<NotificationRecipient> $recipients
+   * @param array<string,mixed> $tokenContext
+   */
   public function send(
     array $recipients,
     string $subject,
@@ -141,7 +152,7 @@ final class BasicNotificationSender implements NotificationSenderInterface {
       $ctx['html']    = array_key_exists('html', $ctx) ? $ctx['html'] : $html;
       $ctx['text']    = array_key_exists('text', $ctx) ? $ctx['text'] : $text;
 
-      $this->sendNotification((int) ($msgTemplateId ?? 0), $r, $ctx);
+      $this->sendNotification($msgTemplateId ?? 0, $r, $ctx);
     }
   }
 

@@ -42,7 +42,7 @@ class HookHandler {
 
     $context = [];
 
-    if (!$this->preMatcher->shouldEnqueueFromHook($op, $entity, $id, (array) $before, (array) $after, $context)) {
+    if (!$this->preMatcher->shouldEnqueueFromHook($op, $entity, $id, $before, $after, $context)) {
       return;
     }
 

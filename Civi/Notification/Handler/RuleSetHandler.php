@@ -12,17 +12,19 @@ final class RuleSetHandler implements RuleSetHandlerInterface {
   public function __construct(private RuleHandlerInterface $ruleHandler) {}
 
   public function evaluateRuleSet(RuleSetEntity $ruleSet, NotificationContext $context): void {
-    $rules = method_exists($ruleSet, 'getRules') ? (array) $ruleSet->getRules() : [];
-    $rsId = method_exists($ruleSet, 'getId') ? $ruleSet->getId() : NULL;
+    /** @var list<\Civi\Notification\Entity\RuleEntity> $rules */
+    $rules = $ruleSet->getRules();
+    $rsId  = $ruleSet->getId();
 
     DbLogger::log('info', 'ruleset.start', 'Evaluating ruleset', [
-      'ruleset_id' => $rsId,
-      'rules_count' => count($rules),
+      'ruleset_id'   => $rsId,
+      'rules_count'  => count($rules),
     ]);
 
     foreach ($rules as $rule) {
-      $ruleId = method_exists($rule, 'getId') ? $rule->getId() : NULL;
-      $title  = method_exists($rule, 'getTitle') ? $rule->getTitle() : NULL;
+      /** @var \Civi\Notification\Entity\RuleEntity $rule */
+      $ruleId = $rule->getId();
+      $title = method_exists($rule, 'getTitle') ? (string) $rule->getTitle() : '';
 
       try {
         DbLogger::log('debug', 'ruleset.rule', 'Checking rule', [
@@ -44,6 +46,7 @@ final class RuleSetHandler implements RuleSetHandlerInterface {
           'rule_id'    => $ruleId,
           'exception'  => $e,
         ]);
+        throw $e;
       }
     }
 

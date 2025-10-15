@@ -1,22 +1,32 @@
 <?php
 declare(strict_types = 1);
 
+/**
+ * @method void setDefaults(array $defaults)
+ * @method mixed getElement(string $name)
+ * @method array exportValues()
+ * @method void addFormRule(callable $callback)
+ * @method string getButtonName(string $type = 'next', ?string $name = null)
+ */
 class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
 
   private const NEW_RULESET_VALUE = 'new';
 
   protected string $entityType = 'Activity';
-  /** @var array<string,mixed> */
+
+  /**
+   * @var array<string,mixed> */
   protected array $editDefaults = [];
 
   public function preProcess(): void {
-    $this->entityType = (string) CRM_Utils_Request::retrieve('entity_type', 'String', $this, FALSE, 'Activity');
+    $this->entityType = $this->toString(CRM_Utils_Request::retrieve('entity_type', 'String', $this, FALSE, 'Activity'));
 
-    $ruleId = (int) CRM_Utils_Request::retrieve('rule_id', 'Positive', $this, FALSE, 0);
+    $ruleId = $this->toInt(CRM_Utils_Request::retrieve('rule_id', 'Positive', $this, FALSE, 0));
     if ($ruleId > 0) {
       $this->editDefaults = $this->loadRuleDefaults($ruleId);
-      if (!empty($this->editDefaults['entity_type'])) {
-        $this->entityType = (string) $this->editDefaults['entity_type'];
+      $edEntity = $this->toString($this->editDefaults['entity_type'] ?? '');
+      if ($edEntity !== '') {
+        $this->entityType = $edEntity;
       }
     }
 
@@ -34,9 +44,11 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     ]);
   }
 
+// phpcs:disable Generic.Metrics.CyclomaticComplexity.TooHigh
   public function buildQuickForm(): void {
+    // phpcs:enable
     $defaults = $this->defaultsForEntity($this->entityType);
-    if (!empty($this->editDefaults)) {
+    if ($this->editDefaults !== []) {
       $defaults = array_merge($defaults, $this->editDefaults);
     }
 
@@ -44,7 +56,12 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
 
     $this->add('text', 'entity_type', ts('Entity Type'), [], TRUE);
     $this->setDefaults(['entity_type' => $this->entityType]);
-    $this->getElement('entity_type')->freeze();
+    $et = $this->getElement('entity_type');
+    if (is_object($et)) {
+      if (method_exists($et, 'freeze')) {
+        $et->freeze();
+      }
+    }
 
     $rulesetChoices = ['' => ts('- none -')]
       + $this->getRuleSetOptions($this->entityType)
@@ -55,7 +72,6 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
 
     $this->add('text', 'ruleset_title', ts('RuleSet Title'));
     $this->add('text', 'rule_title', ts('Rule Title'), [], TRUE);
-
 
     $this->add('advcheckbox', 'is_active', ts('Active'));
 
@@ -84,21 +100,33 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       $fieldOpts, TRUE, ['class' => 'crm-select2', 'id' => 'field_name']);
 
     $ops = ['in' => 'in', 'not_in' => 'not_in', 'eq' => 'eq', 'neq' => 'neq'];
-    $this->add('select', 'operator_before', ts('Operator Before'), $ops, TRUE, ['class' => 'crm-select2', 'id' => 'operator_before']);
+    $this->add('select', 'operator_before', ts('Operator Before'), $ops, TRUE,
+      ['class' => 'crm-select2', 'id' => 'operator_before']);
     $this->add('text', 'value_before', ts('or raw (Before)'), ['id' => 'value_before']);
 
-    $this->add('select', 'operator_after', ts('Operator After'), $ops, TRUE, ['class' => 'crm-select2', 'id' => 'operator_after']);
+    $this->add('select', 'operator_after', ts('Operator After'), $ops, TRUE,
+      ['class' => 'crm-select2', 'id' => 'operator_after']);
     $this->add('text', 'value_after', ts('or raw (After)'), ['id' => 'value_after']);
 
-    $prefillBefore = $this->decodeJsonArray((string) ($defaults['value_before'] ?? '[]'));
-    $prefillAfter  = $this->decodeJsonArray((string) ($defaults['value_after'] ?? '[]'));
+    $prefillBefore = $this->decodeJsonArray($this->toString($defaults['value_before'] ?? '[]'));
+    $prefillAfter  = $this->decodeJsonArray($this->toString($defaults['value_after'] ?? '[]'));
     $this->add('select', 'value_before_opts', ts('Value Before (by label)'), [], FALSE,
-      ['class' => 'crm-select2', 'multiple' => TRUE, 'id' => 'value_before_opts', 'data-prefill' => json_encode($prefillBefore)]);
+      [
+        'class' => 'crm-select2',
+        'multiple' => TRUE,
+        'id' => 'value_before_opts',
+        'data-prefill' => json_encode($prefillBefore),
+      ]);
     $this->add('select', 'value_after_opts', ts('Value After (by label)'), [], FALSE,
-      ['class' => 'crm-select2', 'multiple' => TRUE, 'id' => 'value_after_opts', 'data-prefill' => json_encode($prefillAfter)]);
+      [
+        'class' => 'crm-select2',
+        'multiple' => TRUE,
+        'id' => 'value_after_opts',
+        'data-prefill' => json_encode($prefillAfter),
+      ]);
 
     // Message
-    $mtDefault = isset($defaults['message_template_id']) ? (string) $defaults['message_template_id'] : '';
+    $mtDefault = isset($defaults['message_template_id']) ? $this->toString($defaults['message_template_id']) : '';
     $this->add('select', 'message_template_id', ts('Message Template'),
       ['' => ts('- select Message Template -')], TRUE,
       ['class' => 'crm-select2', 'id' => 'message_template_id', 'data-default' => $mtDefault]
@@ -106,21 +134,22 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
 
     // Defaults
     $defaults += [
-      'is_active' => isset($defaults['is_active']) ? (int) !empty($defaults['is_active']) : 1,
-      'rule_id'   => ($this->editDefaults['rule_id'] ?? 0),
+      'is_active' => isset($defaults['is_active']) ? (int) (bool) $defaults['is_active'] : 1,
+      'rule_id'   => $this->toInt($this->editDefaults['rule_id'] ?? 0),
     ];
     $this->setDefaults($defaults);
 
     $buttons = [
-      ['type' => 'next',   'name' => ts('Create / Update'), 'isDefault' => TRUE],
+      ['type' => 'next', 'name' => ts('Create / Update'), 'isDefault' => TRUE],
       ['type' => 'cancel', 'name' => ts('Cancel')],
     ];
-    if (!empty($this->editDefaults['rule_id'])) {
+    $hasRule = $this->toInt($this->editDefaults['rule_id'] ?? 0) > 0;
+    if ($hasRule) {
       $buttons[] = [
         'type'    => 'next',
         'name'    => ts('Delete rule'),
         'subName' => 'delete',
-        'class'   => 'crm-button crm-button-type-delete', // estilo rojo core
+        'class'   => 'crm-button crm-button-type-delete',
       ];
     }
     $this->addButtons($buttons);
@@ -130,39 +159,43 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
   }
 
   /**
-   * @return TRUE|array<string,string>
+   * @param array<string,mixed> $values
+   * @return true|array<string,string>
    */
-  public function formRule($values) {
+  public function formRule(array $values) {
     if ($this->controller->getButtonName() === $this->getButtonName('next', 'delete')) {
       return TRUE;
     }
 
     $errors = [];
-    $rsSel = (string) ($values['ruleset_id'] ?? '');
-    $rsTitle = trim((string) ($values['ruleset_title'] ?? ''));
+    $rsSel = $this->toString($values['ruleset_id'] ?? '');
+    $rsTitle = trim($this->toString($values['ruleset_title'] ?? ''));
     if ($rsSel === '' || $rsSel === self::NEW_RULESET_VALUE) {
       if ($rsTitle === '') {
         $errors['ruleset_title'] = ts('Please provide a RuleSet Title when not selecting an existing RuleSet.');
       }
     }
 
-    $mtId = (int) ($values['message_template_id'] ?? 0);
-    if (!$mtId) {
-      $mtId = (int) CRM_Utils_Request::retrieve('message_template_id', 'Positive', $this, FALSE, 0);
+    $mtId = $this->toInt($values['message_template_id'] ?? 0);
+    if ($mtId <= 0) {
+      $mtId = $this->toInt(CRM_Utils_Request::retrieve('message_template_id', 'Positive', $this, FALSE, 0));
     }
-    if (!$mtId) {
+    if ($mtId <= 0) {
       $errors['message_template_id'] = ts('Select a Message Template.');
     }
 
-    return $errors ?: TRUE;
+    return $errors !== [] ? $errors : TRUE;
   }
 
-  // phpcs:disable Generic.Metrics.CyclomaticComplexity.TooHigh
+  /**
+   *
+   */
+  // phpcs:disable Generic.Metrics.CyclomaticComplexity.MaxExceeded
   public function postProcess(): void {
     // phpcs:enable
     $v = $this->exportValues();
 
-    $ruleId = (int) ($v['rule_id'] ?? 0);
+    $ruleId = $this->toInt($v['rule_id'] ?? 0);
 
     if ($this->controller->getButtonName() === $this->getButtonName('next', 'delete') && $ruleId > 0) {
       \Civi\Api4\NotificationContactSelection::delete()->addWhere('rule_id', '=', $ruleId)->execute();
@@ -175,44 +208,46 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       return;
     }
 
-    $entity    = (string) $v['entity_type'];
+    $entity = $this->toString($v['entity_type'] ?? '');
 
-    $rsRaw     = (string) ($v['ruleset_id'] ?? '');
+    $rsRaw     = $this->toString($v['ruleset_id'] ?? '');
     $rulesetId = ctype_digit($rsRaw) ? (int) $rsRaw : 0;
     if (!($rsRaw !== '' && $rsRaw !== self::NEW_RULESET_VALUE && $rulesetId > 0)) {
-      $rsTitle   = trim((string) ($v['ruleset_title'] ?? ''))
-        ?: $this->defaultsForEntity($entity)['ruleset_title'];
+      $defaultsForEntity = $this->defaultsForEntity($entity);
+      $rsTitle   = trim($this->toString($v['ruleset_title'] ?? ($defaultsForEntity['ruleset_title'] ?? '')));
       $rulesetId = $this->ensureRuleSet($rsTitle, $entity);
     }
 
-    $ruTitle = trim((string) $v['rule_title']) ?: $this->defaultsForEntity($entity)['rule_title'];
+    $defaultsForEntity = $this->defaultsForEntity($entity);
+    $ruTitle = trim($this->toString($v['rule_title'] ?? ($defaultsForEntity['rule_title'] ?? '')));
 
-    $langs = $this->normalizeToArray($v['languages'] ?? [])
-      ?: $this->csvToArray($this->defaultsForEntity($entity)['languages_csv']);
+    // ensure languages are array<int,string>
+    $langs = $this->normalizeToStringArray($v['languages'] ?? []);
+    if ($langs === []) {
+      $langs = $this->csvToArray($this->toString($defaultsForEntity['languages_csv'] ?? ''));
+    }
 
     $contacts = $this->entityRefIdsToIntArray($v['contact_ids_er'] ?? []);
     $groups   = $this->entityRefIdsToIntArray($v['group_ids_er'] ?? []);
     $ctypes   = [];
 
-    $field     = trim((string) $v['field_name']);
-    $opBefore  = (string) $v['operator_before'];
-    $opAfter   = (string) $v['operator_after'];
+    $field     = trim($this->toString($v['field_name'] ?? ''));
+    $opBefore  = $this->toString($v['operator_before'] ?? '');
+    $opAfter   = $this->toString($v['operator_after'] ?? '');
     $valBefore = $this->valuesFromEither($v, 'value_before_opts', 'value_before');
     $valAfter  = $this->valuesFromEither($v, 'value_after_opts', 'value_after');
 
     $mtId = 0;
     if (isset($v['message_template_id'])) {
-      $mtId = (int) (is_array($v['message_template_id']) ?
-        reset($v['message_template_id']) : $v['message_template_id']);
+      $mtId = is_array($v['message_template_id'])
+        ? $this->toInt(reset($v['message_template_id']))
+        : $this->toInt($v['message_template_id']);
     }
-    if (!$mtId) {
-      $mtId = (int) CRM_Utils_Request::retrieve('message_template_id', 'Positive', $this, FALSE, 0);
-      if (!$mtId && isset($_POST['message_template_id'])) {
-        $mtId = (int) $_POST['message_template_id'];
-      }
+    if ($mtId <= 0) {
+      $mtId = $this->toInt(CRM_Utils_Request::retrieve('message_template_id', 'Positive', $this, FALSE, 0));
     }
 
-    $isActive = !empty($v['is_active']);
+    $isActive = (bool) ($v['is_active'] ?? FALSE);
 
     $this->ensureQueue();
     $ruId = $this->ensureRule($rulesetId, $ruTitle, $langs, $ruleId, $isActive);
@@ -232,59 +267,65 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
   /**
    * @return array<string,mixed>
    */
+  // phpcs:disable Generic.Metrics.CyclomaticComplexity.MaxExceeded
   protected function loadRuleDefaults(int $ruleId): array {
-    $out = ['rule_id' => $ruleId];
+    // phpcs:enable
+    $out = ['rule_id' => $ruleId, 'languages' => []];
 
     try {
       $r = \Civi\Api4\NotificationRule::get()
         ->addWhere('id', '=', $ruleId)
         ->addSelect('id', 'rule_set_id', 'title', 'languages', 'is_active')
         ->setLimit(1)->execute();
-      if (!$r->count()) {
+      if ($r->count() <= 0) {
         return $out;
       }
 
-      $rule = (array) $r[0];
-      $out['ruleset_id'] = (int) $rule['rule_set_id'];
-      $out['rule_title'] = (string) $rule['title'];
-      $out['is_active']  = !empty($rule['is_active']);
+      $rule = $this->firstRow($r);
+      $out['ruleset_id'] = $this->toInt($rule['rule_set_id'] ?? 0);
+      $out['rule_title'] = $this->toString($rule['title'] ?? '');
+      $out['is_active']  = (bool) ($rule['is_active'] ?? FALSE);
 
       $langs = $rule['languages'] ?? [];
       if (is_string($langs)) {
-        $langs = json_decode($langs, TRUE) ?: [];
+        $tmp = json_decode($langs, TRUE);
+        $langs = is_array($tmp) ? $tmp : [];
       }
-      $out['languages'] = $this->normalizeToArray($langs);
+      $out['languages'] = $this->normalizeToStringArray($langs);
 
       $rs = \Civi\Api4\NotificationRuleSet::get()
-        ->addWhere('id', '=', (int) $rule['rule_set_id'])
+        ->addWhere('id', '=', $this->toInt($rule['rule_set_id'] ?? 0))
         ->addSelect('title', 'monitored_entity_type')
         ->setLimit(1)->execute();
-      if ($rs->count()) {
-        $out['ruleset_title'] = (string) $rs[0]['title'];
-        $out['entity_type']   = (string) $rs[0]['monitored_entity_type'];
+      if ($rs->count() > 0) {
+        $rsRow = $this->firstRow($rs);
+        $out['ruleset_title'] = $this->toString($rsRow['title'] ?? '');
+        $out['entity_type']   = $this->toString($rsRow['monitored_entity_type'] ?? '');
       }
 
       $sel = \Civi\Api4\NotificationContactSelection::get()
         ->addWhere('rule_id', '=', $ruleId)
         ->addSelect('contact_ids', 'group_ids', 'contact_type_ids')
         ->setLimit(1)->execute();
-      if ($sel->count()) {
-        $out['contact_ids_er'] = $this->normalizeToArray($sel[0]['contact_ids'] ?? []);
-        $out['group_ids_er']   = $this->normalizeToArray($sel[0]['group_ids'] ?? []);
+      if ($sel->count() > 0) {
+        $selRow = $this->firstRow($sel);
+        $out['contact_ids_er'] = $this->normalizeToArray($selRow['contact_ids'] ?? []);
+        $out['group_ids_er']   = $this->normalizeToArray($selRow['group_ids'] ?? []);
       }
 
       $fm = \Civi\Api4\NotificationFieldMonitoring::get()
         ->addWhere('rule_id', '=', $ruleId)
         ->addSelect('field_name', 'operator_before', 'value_before', 'operator_after', 'value_after')
         ->setLimit(1)->execute();
-      if ($fm->count()) {
-        $out['field_name']      = (string) $fm[0]['field_name'];
-        $out['operator_before'] = (string) $fm[0]['operator_before'];
-        $out['value_before']    = (string) $fm[0]['value_before'];
-        $out['operator_after']  = (string) $fm[0]['operator_after'];
-        $out['value_after']     = (string) $fm[0]['value_after'];
-        $out['value_before_opts'] = $this->decodeJsonArray((string) $fm[0]['value_before']);
-        $out['value_after_opts']  = $this->decodeJsonArray((string) $fm[0]['value_after']);
+      if ($fm->count() > 0) {
+        $fmRow = $this->firstRow($fm);
+        $out['field_name']        = $this->toString($fmRow['field_name'] ?? '');
+        $out['operator_before']   = $this->toString($fmRow['operator_before'] ?? '');
+        $out['value_before']      = $this->toString($fmRow['value_before'] ?? '');
+        $out['operator_after']    = $this->toString($fmRow['operator_after'] ?? '');
+        $out['value_after']       = $this->toString($fmRow['value_after'] ?? '');
+        $out['value_before_opts'] = $this->decodeJsonArray($this->toString($fmRow['value_before'] ?? ''));
+        $out['value_after_opts']  = $this->decodeJsonArray($this->toString($fmRow['value_after'] ?? ''));
       }
 
       $mt = \Civi\Api4\NotificationRuleMessageTemplate::get()
@@ -292,23 +333,30 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
         ->addSelect('msg_template_id', 'languages')
         ->addOrderBy('id', 'DESC')
         ->setLimit(1)->execute();
-      if ($mt->count()) {
-        $out['message_template_id'] = (int) $mt[0]['msg_template_id'];
-        if (empty($out['languages'])) {
-          $langs2 = $mt[0]['languages'] ?? [];
+      if ($mt->count() > 0) {
+        $mtRow = $this->firstRow($mt);
+        $out['message_template_id'] = $this->toInt($mtRow['msg_template_id'] ?? 0);
+        if ($out['languages'] === []) {
+          $langs2 = $mtRow['languages'] ?? [];
           if (is_string($langs2)) {
-            $langs2 = json_decode($langs2, TRUE) ?: [];
+            $tmp2 = json_decode($langs2, TRUE);
+            $langs2 = is_array($tmp2) ? $tmp2 : [];
           }
-          $out['languages'] = $this->normalizeToArray($langs2);
+          $out['languages'] = $this->normalizeToStringArray($langs2);
         }
       }
     }
     catch (\Throwable $e) {
+      Civi::log()->warning('loadRuleDefaults warning', ['msg' => $e->getMessage()]);
+      throw $e;
     }
 
     return $out;
   }
 
+  /**
+   * @return array<int,string>
+   */
   protected function getRuleSetOptions(string $entity): array {
     try {
       $rs = \Civi\Api4\NotificationRuleSet::get()
@@ -317,61 +365,90 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
         ->addOrderBy('title', 'ASC')->execute();
       $out = [];
       foreach ($rs as $row) {
-        $label = $row['title'] . (!empty($row['is_active']) ? '' : ' ' . ts('(inactive)'));
-        $out[(int) $row['id']] = $label;
+        $rowArr = (array) $row;
+        $labelTitle = $this->toString($rowArr['title'] ?? '');
+        $isActive = (bool) ($rowArr['is_active'] ?? FALSE);
+        $inactiveSuffix = $isActive ? '' : ' ' . ts('(inactive)');
+        $out[$this->toInt($rowArr['id'] ?? 0)] = $labelTitle . $inactiveSuffix;
       }
       return $out;
     }
     catch (\Throwable $e) {
-      return [];
+      Civi::log()->warning('getRuleSetOptions warning', ['msg' => $e->getMessage()]);
+      throw $e;
     }
   }
 
+  /**
+   * @return array<string,string>
+   */
   protected function getLanguageOptions(): array {
+    /** @var array<string,string> $langs */
     $langs = CRM_Core_I18n::languages();
     $out = [];
     foreach ($langs as $code => $label) {
       $out[$code] = $label;
     }
-    return $out ?: ['en_US' => 'English (US)'];
+    return $out !== [] ? $out : ['en_US' => 'English (US)'];
   }
 
+  /**
+   * @return array<string,string>
+   */
   protected function getEntityFieldOptions(string $entity): array {
     $fields = $this->getFieldsForEntity($entity);
     $opts = [];
     foreach ($fields as $f) {
-      if (!empty($f['readonly'])) {
+      if (($f['readonly'] ?? FALSE) === TRUE) {
         continue;
       }
-      $name = (string) $f['name'];
-      $label = ($f['label'] ?? $name);
-      $hasOptions = !empty($f['options']) || !empty($f['optionGroup']) || !empty($f['pseudoconstant']);
+      $name = $this->toString($f['name'] ?? '');
+      if ($name === '') {
+        continue;
+      }
+      $label = $this->toString($f['label'] ?? $name);
+      $hasOptions = (isset($f['options']) && $f['options'] !== [])
+        || array_key_exists('optionGroup', $f)
+        || array_key_exists('pseudoconstant', $f);
       $opts[$name] = $label . ($hasOptions ? ' ⭐' : '');
     }
     asort($opts, SORT_NATURAL | SORT_FLAG_CASE);
     return $opts;
   }
 
+  /**
+   * @return array<int,array<string,mixed>>
+   */
   protected function getFieldsForEntity(string $entity): array {
     try {
       $class = "\\Civi\\Api4\\$entity";
       if ($entity === 'Case' && !class_exists($class)) {
         $class = '\\Civi\\Api4\\CaseEntity';
       }
-      if (class_exists($class) && method_exists($class, 'getFields')) {
-        $res = $class::getFields(FALSE)->execute();
-        return iterator_to_array($res);
+      if (class_exists($class)) {
+        if (method_exists($class, 'getFields')) {
+          $res = $class::getFields(FALSE)->execute();
+          /** @var array<int,array<string,mixed>> $arr */
+          $arr = iterator_to_array($res);
+          return $arr;
+        }
       }
     }
     catch (\Throwable $e) {
+      Civi::log()->warning('getFieldsForEntity warning', ['msg' => $e->getMessage()]);
+      throw $e;
     }
     return [];
   }
 
+  /**
+   * @param array<string,mixed> $v
+   */
   protected function valuesFromEither(array $v, string $selectKey, string $rawKey): string {
-    if (!empty($v[$selectKey])) {
-      $vals = array_values(array_filter((array) $v[$selectKey], static function ($x) {
-        return $x !== '' && $x !== NULL;
+    $hasSelect = isset($v[$selectKey]) && $v[$selectKey] !== [] && $v[$selectKey] !== '';
+    if ($hasSelect) {
+      $vals = array_values(array_filter((array) $v[$selectKey], static function ($x): bool {
+        return $x !== '';
       }));
       $vals = array_map(static function ($x) {
         return (is_string($x) && is_numeric($x)) ? 0 + $x : $x;
@@ -379,9 +456,12 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       $json = json_encode($vals, JSON_UNESCAPED_UNICODE);
       return $json !== FALSE ? $json : '[]';
     }
-    return $this->normalizeValue($v[$rawKey] ?? '');
+    return $this->normalizeValue($this->toString($v[$rawKey] ?? ''));
   }
 
+  /**
+   * @return array<string,mixed>
+   */
   protected function defaultsForEntity(string $entity): array {
     $rs    = $entity . ' – Notifications';
     $ru    = $entity . ' → Completed → notify';
@@ -393,7 +473,7 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     $valA  = '';
     if ($entity === 'Activity') {
       $completed = $this->optionValue('activity_status', 'Completed');
-      if ($completed) {
+      if ($completed > 0) {
         $valB = "[$completed]";
         $valA = "[$completed]";
       }
@@ -408,15 +488,22 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       'operator_after'    => $opsA,
       'value_before'      => $valB,
       'value_after'       => $valA,
+      'languages_csv'     => implode(',', $langs),
     ];
   }
 
+  /**
+   * @return array<int,string>
+   */
   protected function csvToArray(?string $csv): array {
-    if (!$csv) {
+    if ($csv === NULL || $csv === '') {
       return [];
     }
     $parts = preg_split('/\s*,\s*/', trim($csv));
-    return array_values(array_filter($parts, fn($p) => $p !== ''));
+    $parts = $parts === FALSE ? [] : $parts;
+    /** @var array<int,string> $clean */
+    $clean = array_values(array_filter($parts, static fn($p): bool => $p !== ''));
+    return $clean;
   }
 
   protected function normalizeValue(?string $raw): string {
@@ -424,13 +511,14 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     if ($s === '') {
       return '[]';
     }
-    if (preg_match('/^\s*\[.*\]\s*$/', $s)) {
+    if (preg_match('/^\s*\[.*\]\s*$/', $s) === 1) {
       return $s;
     }
     $parts = preg_split('/\s*,\s*/', $s);
+    $parts = $parts === FALSE ? [] : $parts;
     $vals = [];
     foreach ($parts as $p) {
-      if ($p === '' || $p === NULL) {
+      if ($p === '') {
         continue;
       }
       if (is_numeric($p)) {
@@ -444,12 +532,18 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     return $json !== FALSE ? $json : '[]';
   }
 
+  /**
+   * @return array<int,mixed>
+   */
   protected function decodeJsonArray(string $json): array {
     $a = json_decode($json, TRUE);
-    return is_array($a) ? $a : [];
+    return is_array($a) ? array_values($a) : [];
   }
 
-  protected function normalizeToArray($v): array {
+  /**
+   * @return array<int,mixed>
+   */
+  protected function normalizeToArray(mixed $v): array {
     if (is_array($v)) {
       return array_values($v);
     }
@@ -462,26 +556,45 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
         $a = json_decode($s, TRUE);
         return is_array($a) ? array_values($a) : [$s];
       }
-      return array_values(array_filter(preg_split('/\s*,\s*/', $s)));
+      $parts = preg_split('/\s*,\s*/', $s);
+      $parts = $parts === FALSE ? [] : $parts;
+      return array_values(array_filter($parts, static fn($x): bool => $x !== ''));
     }
     return [];
   }
 
-  protected function entityRefIdsToIntArray($erValue): array {
+  /**
+   * @return array<int,string>
+   */
+  protected function normalizeToStringArray(mixed $v): array {
+    $a = $this->normalizeToArray($v);
+    /** @var array<int,string> $strings */
+    $strings = array_values(array_map([$this, 'toString'], $a));
+    return $strings;
+  }
+
+  /**
+   * @param array<int,string|int|array{id?:int}|mixed> $erValue
+   * @return array<int,int>
+   */
+  protected function entityRefIdsToIntArray(mixed $erValue): array {
     if (is_string($erValue)) {
-      $parts = array_values(array_filter(preg_split('/\s*,\s*/', $erValue)));
-      return array_values(array_filter(array_map('intval', $parts)));
+      $parts = preg_split('/\s*,\s*/', $erValue);
+      $parts = $parts === FALSE ? [] : $parts;
+      $parts = array_values(array_filter($parts, static fn($p): bool => $p !== ''));
+      $ints  = array_map([$this, 'toInt'], $parts);
+      return array_values(array_filter($ints, static fn(int $n): bool => $n > 0));
     }
     $out = [];
     foreach ((array) $erValue as $item) {
       if (is_array($item) && isset($item['id'])) {
-        $out[] = (int) $item['id'];
+        $out[] = $this->toInt($item['id']);
       }
       else {
-        $out[] = (int) $item;
+        $out[] = $this->toInt($item);
       }
     }
-    return array_values(array_filter($out));
+    return array_values(array_filter($out, static fn(int $n): bool => $n > 0));
   }
 
   protected function optionValue(string $groupName, string $name): int {
@@ -490,11 +603,14 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
         ->addWhere('option_group_id:name', '=', $groupName)
         ->addWhere('name', '=', $name)
         ->addSelect('value')->setLimit(1)->execute();
-      if (isset($r[0]['value'])) {
-        return (int) $r[0]['value'];
+      $row = $this->firstRow($r);
+      if (isset($row['value'])) {
+        return $this->toInt($row['value']);
       }
     }
     catch (\Throwable $e) {
+      Civi::log()->warning('optionValue warning', ['msg' => $e->getMessage()]);
+      throw $e;
     }
     return 0;
   }
@@ -506,8 +622,16 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     );
   }
 
-  // NUEVO: $isActive
-  protected function ensureRule(int $ruleSetId, string $title, array $languages, int $ruleId = 0, bool $isActive = TRUE): int {
+  /**
+   * @param array<int,string> $languages
+   */
+  protected function ensureRule(
+    int $ruleSetId,
+    string $title,
+    array $languages,
+    int $ruleId = 0,
+    bool $isActive = TRUE
+  ): int {
     if ($ruleId > 0) {
       \Civi\Api4\NotificationRule::update()
         ->addWhere('id', '=', $ruleId)
@@ -525,9 +649,10 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       ->addWhere('rule_set_id', '=', $ruleSetId)
       ->addWhere('title', '=', $title)
       ->addSelect('id')->setLimit(1)->execute();
-    if ($existing->count()) {
+    if ($existing->count() > 0) {
+      $exRow = $this->firstRow($existing);
       \Civi\Api4\NotificationRule::update()
-        ->addWhere('id', '=', $existing[0]['id'])
+        ->addWhere('id', '=', $this->toInt($exRow['id'] ?? 0))
         ->addValue('rule_set_id', $ruleSetId)
         ->addValue('title', $title)
         ->addValue('is_active', $isActive)
@@ -535,7 +660,7 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
         ->addValue('on_update', TRUE)
         ->addValue('on_delete', FALSE)
         ->addValue('languages', $languages)->execute();
-      return (int) $existing[0]['id'];
+      return $this->toInt($exRow['id'] ?? 0);
     }
 
     $create = \Civi\Api4\NotificationRule::create()
@@ -546,7 +671,8 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       ->addValue('on_update', TRUE)
       ->addValue('on_delete', FALSE)
       ->addValue('languages', $languages)->execute();
-    return (int) $create[0]['id'];
+    $crRow = $this->firstRow($create);
+    return $this->toInt($crRow['id'] ?? 0);
   }
 
   protected function ensureRuleSet(string $title, string $entity): int {
@@ -554,12 +680,13 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       ->addWhere('title', '=', $title)
       ->addWhere('monitored_entity_type', '=', $entity)
       ->addSelect('id')->setLimit(1)->execute();
-    if ($existing->count()) {
+    if ($existing->count() > 0) {
+      $exRow = $this->firstRow($existing);
       \Civi\Api4\NotificationRuleSet::update()
-        ->addWhere('id', '=', $existing[0]['id'])
+        ->addWhere('id', '=', $this->toInt($exRow['id'] ?? 0))
         ->addValue('is_active', TRUE)
         ->addValue('is_execute_only_first_rule', FALSE)->execute();
-      return (int) $existing[0]['id'];
+      return $this->toInt($exRow['id'] ?? 0);
     }
     $create = \Civi\Api4\NotificationRuleSet::create()
       ->addValue('title', $title)
@@ -568,7 +695,8 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       ->addValue('source_entity_id', 0)
       ->addValue('is_active', TRUE)
       ->addValue('is_execute_only_first_rule', FALSE)->execute();
-    return (int) $create[0]['id'];
+    $crRow = $this->firstRow($create);
+    return $this->toInt($crRow['id'] ?? 0);
   }
 
   protected function resetContactSelection(int $ruleId): void {
@@ -576,7 +704,17 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       ->addWhere('rule_id', '=', $ruleId)->execute();
   }
 
-  protected function createContactSelection(int $ruleId, array $contactIds, array $groupIds, array $contactTypes): void {
+  /**
+   * @param array<int,int> $contactIds
+   * @param array<int,int> $groupIds
+   * @param array<int,int> $contactTypes
+   */
+  protected function createContactSelection(
+    int $ruleId,
+    array $contactIds,
+    array $groupIds,
+    array $contactTypes
+  ): void {
     \Civi\Api4\NotificationContactSelection::create()
       ->addValue('rule_id', $ruleId)
       ->addValue('contact_ids', $contactIds)
@@ -596,9 +734,10 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
       ->addWhere('rule_id', '=', $ruleId)
       ->addWhere('field_name', '=', $field)
       ->addSelect('id')->setLimit(1)->execute();
-    if ($existing->count()) {
+    if ($existing->count() > 0) {
+      $exRow = $this->firstRow($existing);
       \Civi\Api4\NotificationFieldMonitoring::update()
-        ->addWhere('id', '=', $existing[0]['id'])
+        ->addWhere('id', '=', $this->toInt($exRow['id'] ?? 0))
         ->addValue('operator_before', $opBefore)
         ->addValue('value_before', $valBefore)
         ->addValue('operator_after', $opAfter)
@@ -615,6 +754,9 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     }
   }
 
+  /**
+   * @param array<int,string> $languages
+   */
   protected function replaceRuleMessageTemplate(int $ruleId, int $mtId, array $languages): void {
     \Civi\Api4\NotificationRuleMessageTemplate::delete()
       ->addWhere('rule_id', '=', $ruleId)->execute();
@@ -635,4 +777,67 @@ class CRM_Notification_Form_EntityRuleWizard extends CRM_Core_Form {
     ];
     return $m[$entity] ?? strtolower($entity);
   }
+
+  /* ========= Helpers ========= */
+
+  /**
+   * @param \Civi\Api4\Generic\Result|iterable<mixed>|array<mixed>|null $result
+   * @return array<string,mixed>
+   */
+  // phpcs:disable Generic.Metrics.CyclomaticComplexity.TooHigh
+  private function firstRow($result): array {
+    // phpcs:enable
+    if ($result === NULL) {
+      return [];
+    }
+    if (is_array($result)) {
+      foreach ($result as $row) {
+        return is_array($row) ? $row : (array) $row;
+      }
+      return [];
+    }
+    if ($result instanceof \Traversable) {
+      foreach ($result as $row) {
+        return is_array($row) ? $row : (array) $row;
+      }
+      return [];
+    }
+    if ($result instanceof \ArrayAccess) {
+      if (isset($result[0])) {
+        $row = $result[0];
+        return is_array($row) ? $row : (array) $row;
+      }
+    }
+    return [];
+  }
+
+  private function toInt(mixed $value): int {
+    if (is_int($value)) {
+      return $value;
+    }
+    if (is_float($value)) {
+      return (int) $value;
+    }
+    if (is_string($value)) {
+      $v = trim($value);
+      if ($v === '') {
+        return 0;
+      }
+      if (preg_match('/^-?\d+$/', $v) === 1) {
+        return (int) $v;
+      }
+    }
+    return 0;
+  }
+
+  private function toString(mixed $value): string {
+    if (is_string($value)) {
+      return $value;
+    }
+    if (is_int($value) || is_float($value)) {
+      return (string) $value;
+    }
+    return '';
+  }
+
 }

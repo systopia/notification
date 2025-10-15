@@ -31,4 +31,5 @@ class NotificationQueue extends AbstractEntity {
     return (new BasicGetFieldsAction(static::getEntityName(), __FUNCTION__, $getter))
       ->setCheckPermissions($checkPermissions);
   }
+
 }
